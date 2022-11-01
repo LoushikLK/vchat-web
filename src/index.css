@@ -12,4 +12,7 @@
   .custom-container {
     @apply container mx-auto px-4;
   }
+  .hover-custom {
+    @apply transition-all duration-200 hover:scale-110 ease-in-out;
+  }
 }
