@@ -1,5 +1,5 @@
 import { PublicLayout } from "layouts";
-import { ForgotPassword, Login, Register } from "pages/auth";
+import { ForgotPassword, Login } from "pages/auth";
 import { Route, Routes } from "react-router-dom";
 
 const PublicRoutes = () => {
@@ -8,7 +8,7 @@ const PublicRoutes = () => {
       <Routes>
         <Route path="/" element={<Login />} />
         <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
+        <Route path="/register" element={<Login />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
       </Routes>
     </PublicLayout>
