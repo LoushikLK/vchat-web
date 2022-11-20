@@ -1,6 +1,5 @@
-import { Container, VStack } from "@chakra-ui/react";
 import { LOGO } from "assets";
-import React from "react";
+import { Link } from "react-router-dom";
 
 const Header = () => {
   return (
@@ -8,12 +7,14 @@ const Header = () => {
       <div className="flex justify-between items-center h-full">
         <img className="h-7 w-28 object-contain" src={LOGO} alt="" />
         <ul className="flex gap-4 text-sm font-semibold text-gray-700">
-          <li className="cursor-pointer hover-custom">New to Zoom?</li>
+          <li className="cursor-pointer hover-custom">New to vChat?</li>
           <li className="text-blue-500 cursor-pointer hover-custom">
-            Sign Up Free
+            <Link to={"/login"}>Sign In</Link>
+          </li>
+          <li className="text-blue-500 cursor-pointer hover-custom">
+            <Link to={"/register"}>Sign Up Free</Link>
           </li>
           <li className="text-blue-500 cursor-pointer hover-custom">Support</li>
-          <li className="text-blue-500 cursor-pointer hover-custom">English</li>
         </ul>
       </div>
     </section>
