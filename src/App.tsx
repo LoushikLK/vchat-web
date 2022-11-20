@@ -1,8 +1,8 @@
-import { PublicRoutes } from "routes";
+import { PrivateRoutes } from "routes";
 import "./App.css";
 
 function App() {
-  return <PublicRoutes />;
+  return <PrivateRoutes />;
 }
 
 export default App;
