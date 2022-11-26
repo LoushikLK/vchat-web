@@ -21,6 +21,7 @@ const CallUI = () => {
 
   useEffect(() => {
     (async () => {
+      if (!peerConnection) return;
       const localVideoStream = await navigator.mediaDevices.getUserMedia({
         video: true,
         audio: true,
@@ -30,7 +31,7 @@ const CallUI = () => {
 
       // Push tracks from local stream to peer connection
       localVideoStream?.getTracks().forEach((track) => {
-        peerConnection.addTrack(track, localVideoStream);
+        peerConnection?.addTrack(track, localVideoStream);
       });
       // Pull tracks from remote stream, add to video stream
       peerConnection.ontrack = (event: any) => {
@@ -41,6 +42,9 @@ const CallUI = () => {
       myVideoRef.current.srcObject = localVideoStream;
       remoteVideo.current.srcObject = remoteStream.current;
     })();
+    return () => {
+      peerConnection?.close();
+    };
   }, [peerConnection]);
 
   return (
@@ -58,7 +62,7 @@ const CallUI = () => {
           <video
             ref={myVideoRef}
             className={` ${
-              myVideoRef?.current
+              remoteVideo
                 ? "h-[10rem] absolute bottom-5 right-5 border-4 rounded-xl  bg-black   w-[18rem] "
                 : "h-screen  w-full"
             }  transition-all ease-in-out object-cover duration-300 `}

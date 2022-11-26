@@ -1,10 +1,17 @@
-import { createContext, useContext, useEffect, useRef, useState } from "react";
+import {
+  createContext,
+  MutableRefObject,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 
 const contextDefaultValues: any = {};
 
 type APP_CONTEXT = {
   appLoading: boolean;
-  peerConnection?: any;
+  peerConnection: MutableRefObject<RTCPeerConnection | null>;
 };
 
 const servers = {
@@ -29,11 +36,20 @@ type Props = {
 
 export const AppContextProvider = ({ children }: Props) => {
   const [appLoading, setAppLoading] = useState(true);
-  const peerConnection = useRef<any>(null);
+  const peerConnection = useRef<RTCPeerConnection | null>(null);
 
   useEffect(() => {
-    peerConnection.current = new RTCPeerConnection(servers);
+    (() => {
+      peerConnection.current = new RTCPeerConnection(servers);
+      setAppLoading(false);
+    })();
+
+    return () => {
+      peerConnection?.current?.close();
+    };
   }, []);
+
+  console.log(peerConnection);
 
   return (
     <AppContext.Provider
