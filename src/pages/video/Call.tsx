@@ -7,42 +7,41 @@ import {
   VideoOutlined,
 } from "assets/Icons";
 import { VideoChat } from "components/chat";
-import { useEffect, useState } from "react";
+import useAppState from "context/useAppState";
+import { useEffect, useRef, useState } from "react";
 
 const CallUI = () => {
   const [drawerActive, setDrawerActive] = useState(true);
 
-  const [videoStream, setVideoStream] = useState<any>(undefined);
+  const { peerConnection } = useAppState();
 
-  // useEffect(() => {
-  //   let timeOut = setInterval(() => {
-  //     setDrawerActive(!drawerActive);
-  //   }, 1000);
-
-  //   return () => {
-  //     clearInterval(timeOut);
-  //   };
-  // }, [drawerActive]);
+  const myVideoRef = useRef<any>(null);
+  const remoteStream = useRef<any>(null);
+  const remoteVideo = useRef<any>(null);
 
   useEffect(() => {
-    let mounted = true;
+    (async () => {
+      const localVideoStream = await navigator.mediaDevices.getUserMedia({
+        video: true,
+        audio: true,
+      });
 
-    if (mounted) {
-      (async () => {
-        const stream = await navigator.mediaDevices.getUserMedia({
-          video: true,
-          audio: true,
+      remoteStream.current = new MediaStream();
+
+      // Push tracks from local stream to peer connection
+      localVideoStream?.getTracks().forEach((track) => {
+        peerConnection.addTrack(track, localVideoStream);
+      });
+      // Pull tracks from remote stream, add to video stream
+      peerConnection.ontrack = (event: any) => {
+        event.streams[0].getTracks().forEach((track: any) => {
+          remoteStream.current.addTrack(track);
         });
-
-        console.log(stream);
-        setVideoStream(stream);
-      })();
-    }
-
-    return () => {
-      mounted = false;
-    };
-  }, []);
+      };
+      myVideoRef.current.srcObject = localVideoStream;
+      remoteVideo.current.srcObject = remoteStream.current;
+    })();
+  }, [peerConnection]);
 
   return (
     <section className="w-full  relative text-white  ">
@@ -50,14 +49,28 @@ const CallUI = () => {
         <div
           className={` ${
             drawerActive ? "w-[calc(100vw-500px)]" : "w-full"
-          } h-full min-h-screen  border-r relative transition-all ease-in-out duration-300  bg-gray-900 border-white `}
+          } h-full   border-r relative transition-all ease-in-out duration-300  bg-gray-900 border-white  `}
         >
           {/* <div className=" absolute top-1/2 left-1/2 bg-blue-500 h-60 rounded-full -translate-x-1/2 -translate-y-1/2 w-60 text-7xl text-center  flex items-center justify-center  ">
             LK
           </div> */}
+
           <video
-            src={videoStream}
-            className="min-h-screen w-full"
+            ref={myVideoRef}
+            className={` ${
+              myVideoRef?.current
+                ? "h-[10rem] absolute bottom-5 right-5 border-4 rounded-xl  bg-black   w-[18rem] "
+                : "h-screen  w-full"
+            }  transition-all ease-in-out object-cover duration-300 `}
+            autoPlay={true}
+          />
+          <video
+            ref={remoteVideo}
+            className={` ${
+              remoteVideo?.current
+                ? "h-[10rem] absolute bottom-5 right-5 border-4 rounded-xl  bg-black   w-[18rem] "
+                : "h-screen  w-full"
+            }  transition-all ease-in-out object-cover duration-300 `}
             autoPlay={true}
           />
         </div>
