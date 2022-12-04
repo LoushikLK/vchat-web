@@ -49,7 +49,7 @@ const CallUI = () => {
 
   return (
     <section className="w-full  relative text-white  ">
-      <div className="w-full flex">
+      <div className="w-full  flex">
         <div
           className={` ${
             drawerActive ? "w-[calc(100vw-500px)]" : "w-full"
@@ -81,7 +81,7 @@ const CallUI = () => {
 
         <div
           className={` ${
-            drawerActive ? "w-[500px]" : "w-0"
+            drawerActive ? "w-[500px]" : "w-0 hidden"
           } h-full min-h-screen  transition-all ease-in-out duration-300 `}
         >
           {" "}
