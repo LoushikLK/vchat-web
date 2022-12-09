@@ -6,6 +6,7 @@ import {
   Stack,
 } from "@chakra-ui/react";
 import { useState } from "react";
+import { Link } from "react-router-dom";
 
 const ForgotPassword = () => {
   const [otpSend, setOptSend] = useState(false);
@@ -28,9 +29,11 @@ const ForgotPassword = () => {
               <span className="  flex items-center text-center text-sm text-gray-600">
                 Do not have an account?{"  "}
               </span>
-              <span className="text-blue-500 hover:underline cursor-pointer font-medium text-sm">
-                Register here
-              </span>
+              <Link to={"/register"}>
+                <span className="text-blue-500 hover:underline cursor-pointer font-medium text-sm">
+                  Register here
+                </span>
+              </Link>
             </div>
           </div>
         ) : (
