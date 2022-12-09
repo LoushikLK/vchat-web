@@ -1,3 +1,4 @@
+import { BASE_URL } from "config";
 import {
   createContext,
   MutableRefObject,
@@ -6,12 +7,14 @@ import {
   useRef,
   useState,
 } from "react";
+import UserType from "types/user";
 
 const contextDefaultValues: any = {};
 
 type APP_CONTEXT = {
   appLoading: boolean;
   peerConnection: MutableRefObject<RTCPeerConnection | null>;
+  user: UserType | null;
 };
 
 const servers = {
@@ -36,12 +39,12 @@ type Props = {
 
 export const AppContextProvider = ({ children }: Props) => {
   const [appLoading, setAppLoading] = useState(true);
+  const [user, setUser] = useState<UserType | null>(null);
   const peerConnection = useRef<RTCPeerConnection | null>(null);
 
   useEffect(() => {
     (() => {
       peerConnection.current = new RTCPeerConnection(servers);
-      setAppLoading(false);
     })();
 
     return () => {
@@ -49,13 +52,31 @@ export const AppContextProvider = ({ children }: Props) => {
     };
   }, []);
 
-  console.log(peerConnection);
+  useEffect(() => {
+    (async () => {
+      try {
+        let response = await fetch(BASE_URL + `my-account`);
+
+        let data = await response?.json();
+        if (response?.status !== 200) {
+          setUser(null);
+        }
+
+        setUser(data);
+      } catch (error) {
+        console.log(error);
+      } finally {
+        setAppLoading(false);
+      }
+    })();
+  }, []);
 
   return (
     <AppContext.Provider
       value={{
         appLoading,
         peerConnection,
+        user,
       }}
     >
       {children}
@@ -64,11 +85,12 @@ export const AppContextProvider = ({ children }: Props) => {
 };
 
 const useAppState = () => {
-  const { appLoading, peerConnection } = useContext(AppContext);
+  const { appLoading, peerConnection, user } = useContext(AppContext);
 
   return {
     appLoading,
     peerConnection: peerConnection?.current,
+    user,
   };
 };
 
