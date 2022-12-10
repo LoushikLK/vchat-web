@@ -15,6 +15,7 @@ type APP_CONTEXT = {
   appLoading: boolean;
   peerConnection: MutableRefObject<RTCPeerConnection | null>;
   user: UserType | null;
+  setUser: (arg: UserType) => void;
 };
 
 const servers = {
@@ -55,14 +56,20 @@ export const AppContextProvider = ({ children }: Props) => {
   useEffect(() => {
     (async () => {
       try {
-        let response = await fetch(BASE_URL + `my-account`);
+        let ACCESS_TOKEN = localStorage.getItem("ACCESS_TOKEN");
+        if (!ACCESS_TOKEN) throw new Error("No access token found");
+        let response = await fetch(BASE_URL + `my-account`, {
+          headers: {
+            authorization: `Bearer ${ACCESS_TOKEN}`,
+          },
+        });
 
         let data = await response?.json();
         if (response?.status !== 200) {
           setUser(null);
         }
 
-        setUser(data);
+        setUser(data?.data?.data);
       } catch (error) {
         console.log(error);
       } finally {
@@ -77,6 +84,7 @@ export const AppContextProvider = ({ children }: Props) => {
         appLoading,
         peerConnection,
         user,
+        setUser,
       }}
     >
       {children}
@@ -85,12 +93,13 @@ export const AppContextProvider = ({ children }: Props) => {
 };
 
 const useAppState = () => {
-  const { appLoading, peerConnection, user } = useContext(AppContext);
+  const { appLoading, peerConnection, user, setUser } = useContext(AppContext);
 
   return {
     appLoading,
     peerConnection: peerConnection?.current,
     user,
+    setUser,
   };
 };
 

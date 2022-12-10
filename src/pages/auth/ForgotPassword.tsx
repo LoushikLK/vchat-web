@@ -9,7 +9,7 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 
 const ForgotPassword = () => {
-  const [otpSend, setOptSend] = useState(false);
+  const [otpSend, setOptSend] = useState(true);
 
   return (
     <div className="w-1/2 h-full flex justify-center items-center">
