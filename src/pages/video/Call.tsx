@@ -8,12 +8,24 @@ import {
 } from "assets/Icons";
 import { VideoChat } from "components/chat";
 import useAppState from "context/useAppState";
+import { useFetch, useMounted } from "hooks";
 import { useEffect, useRef, useState } from "react";
+import { useParams } from "react-router-dom";
+import { toast } from "react-toastify";
 
 const CallUI = () => {
   const [drawerActive, setDrawerActive] = useState(true);
+  const [roomData, setRoomData] = useState<any>(null);
 
-  const { peerConnection } = useAppState();
+  const { roomId } = useParams();
+
+  console.log(roomId);
+
+  const { peerConnection, socket, user } = useAppState();
+
+  const { mutate } = useFetch();
+
+  const isMounted = useMounted();
 
   const myVideoRef = useRef<any>(null);
   const remoteStream = useRef<any>(null);
@@ -46,6 +58,31 @@ const CallUI = () => {
       peerConnection?.close();
     };
   }, [peerConnection]);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        let response = await mutate({
+          path: `/room/${roomId}`,
+          method: "GET",
+        });
+
+        if (response?.data?.error) throw new Error(response?.data?.error);
+
+        setRoomData(response?.data?.data);
+
+        socket.emit("join-new-room", {
+          roomId,
+          userId: user?._id,
+          peerData: {}, //working on here
+        });
+      } catch (error) {
+        if (error instanceof Error) {
+          toast.error(error?.message);
+        }
+      }
+    })();
+  }, [roomId, isMounted]);
 
   return (
     <section className="w-full  relative text-white  ">

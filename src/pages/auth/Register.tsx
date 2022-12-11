@@ -40,6 +40,7 @@ const Register = () => {
         formData?.append("password", values?.password);
         formData?.append("role", "USER");
         formData?.append("confirmPassword", values?.confirmPassword);
+        formData?.append("phoneNumber", values?.phoneNumber);
 
         const res = await mutate({
           path: "auth/user/create",
@@ -75,6 +76,7 @@ const Register = () => {
               )}
             >
               <Input
+                value={registerFormik?.values?.name}
                 variant="filled"
                 placeholder="Name"
                 name="name"
@@ -93,6 +95,7 @@ const Register = () => {
               )}
             >
               <Input
+                value={registerFormik?.values?.email}
                 variant="filled"
                 placeholder="Email Address"
                 name="email"
@@ -107,11 +110,33 @@ const Register = () => {
             </FormControl>
             <FormControl
               isInvalid={Boolean(
+                registerFormik?.touched?.phoneNumber &&
+                  registerFormik?.errors?.phoneNumber
+              )}
+            >
+              <Input
+                value={registerFormik?.values?.phoneNumber}
+                variant="filled"
+                type="phoneNumber"
+                placeholder="PhoneNumber"
+                name="phoneNumber"
+                onChange={registerFormik?.handleChange}
+                onBlur={registerFormik?.handleBlur}
+              />
+
+              <FormErrorMessage>
+                {registerFormik?.touched?.phoneNumber &&
+                  (registerFormik?.errors?.phoneNumber as any)}
+              </FormErrorMessage>
+            </FormControl>
+            <FormControl
+              isInvalid={Boolean(
                 registerFormik?.touched?.password &&
                   registerFormik?.errors?.password
               )}
             >
               <Input
+                value={registerFormik?.values?.password}
                 variant="filled"
                 type="password"
                 placeholder="Password"
@@ -132,6 +157,7 @@ const Register = () => {
               )}
             >
               <Input
+                value={registerFormik?.values?.confirmPassword}
                 variant="filled"
                 type="password"
                 placeholder="Confirm Password"

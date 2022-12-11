@@ -7,6 +7,9 @@ import {
   useRef,
   useState,
 } from "react";
+
+import { connect } from "socket.io-client";
+
 import UserType from "types/user";
 
 const contextDefaultValues: any = {};
@@ -16,6 +19,7 @@ type APP_CONTEXT = {
   peerConnection: MutableRefObject<RTCPeerConnection | null>;
   user: UserType | null;
   setUser: (arg: UserType) => void;
+  socket?: any;
 };
 
 const servers = {
@@ -23,15 +27,17 @@ const servers = {
     {
       urls: [
         "stun:stun.l.google.com:19302",
-        "stun:stun1.l.google.com:19302",
-        "stun:stun2.l.google.com:19302",
-        "stun:stun3.l.google.com:19302",
-        "stun:stun4.l.google.com:19302",
+        // "stun:stun1.l.google.com:19302",
+        // "stun:stun2.l.google.com:19302",
+        // "stun:stun3.l.google.com:19302",
+        // "stun:stun4.l.google.com:19302",
       ],
     },
   ],
   iceCandidatePoolSize: 10,
 };
+
+const socketServer = `ws://192.168.56.1:8000/`;
 
 const AppContext = createContext<APP_CONTEXT>(contextDefaultValues);
 type Props = {
@@ -42,6 +48,17 @@ export const AppContextProvider = ({ children }: Props) => {
   const [appLoading, setAppLoading] = useState(true);
   const [user, setUser] = useState<UserType | null>(null);
   const peerConnection = useRef<RTCPeerConnection | null>(null);
+
+  const socket = useRef<any>(null);
+
+  useEffect(() => {
+    socket.current = connect(socketServer);
+
+    socket?.current?.on("connect", () => {
+      if (!user?._id) return;
+      socket?.current?.emit("user-connected", user?._id);
+    });
+  }, [user?._id]);
 
   useEffect(() => {
     (() => {
@@ -85,6 +102,7 @@ export const AppContextProvider = ({ children }: Props) => {
         peerConnection,
         user,
         setUser,
+        socket: socket?.current,
       }}
     >
       {children}
@@ -93,13 +111,15 @@ export const AppContextProvider = ({ children }: Props) => {
 };
 
 const useAppState = () => {
-  const { appLoading, peerConnection, user, setUser } = useContext(AppContext);
+  const { appLoading, peerConnection, user, setUser, socket } =
+    useContext(AppContext);
 
   return {
     appLoading,
     peerConnection: peerConnection?.current,
     user,
     setUser,
+    socket,
   };
 };
 

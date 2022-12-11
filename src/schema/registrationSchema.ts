@@ -26,6 +26,17 @@ export const registerSchema = [
       .required("Name is required*"),
   },
   {
+    key: "5",
+    name: "phoneNumber",
+    initialValue: "",
+    validationSchema: Yup.string()
+      .matches(
+        /(\+\d{1,3}\s?)?((\(\d{3}\)\s?)|(\d{3})(\s|-?))(\d{3}(\s|-?))(\d{4})(\s?(([E|e]xt[:|.|]?)|x|X)(\s?\d+))?/g,
+        "Enter a valid phone number"
+      )
+      .required("Name is required*"),
+  },
+  {
     key: "4",
     name: "confirmPassword",
     initialValue: "",
