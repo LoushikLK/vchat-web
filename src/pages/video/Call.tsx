@@ -19,8 +19,6 @@ const CallUI = () => {
 
   const { roomId } = useParams();
 
-  console.log(roomId);
-
   const { peerConnection, socket, user } = useAppState();
 
   const { mutate } = useFetch();
@@ -54,9 +52,6 @@ const CallUI = () => {
       myVideoRef.current.srcObject = localVideoStream;
       remoteVideo.current.srcObject = remoteStream.current;
     })();
-    return () => {
-      peerConnection?.close();
-    };
   }, [peerConnection]);
 
   useEffect(() => {
@@ -71,18 +66,72 @@ const CallUI = () => {
 
         setRoomData(response?.data?.data);
 
-        socket.emit("join-new-room", {
-          roomId,
-          userId: user?._id,
-          peerData: {}, //working on here
-        });
+        if (!peerConnection) return;
+
+        // Create offer
+        const offerDescription = await peerConnection?.createOffer();
+        await peerConnection?.setLocalDescription(offerDescription);
+
+        const offer = {
+          sdp: offerDescription?.sdp,
+          type: offerDescription?.type,
+        };
+
+        peerConnection.onicecandidate = (event: any) => {
+          socket.emit("join-new-room", {
+            roomId,
+            userId: user?._id,
+            peerData: offer,
+            candidate: event?.candidate,
+          });
+        };
       } catch (error) {
         if (error instanceof Error) {
           toast.error(error?.message);
         }
       }
     })();
-  }, [roomId, isMounted]);
+  }, [roomId, isMounted, peerConnection]);
+
+  useEffect(() => {
+    (async () => {
+      if (!peerConnection) return;
+
+      socket.on("user-joined", async (data: any) => {
+        const offerDescription = data.peerData;
+
+        await peerConnection.setRemoteDescription(
+          new RTCSessionDescription(offerDescription)
+        );
+
+        const answerDescription = await peerConnection?.createAnswer();
+        await peerConnection?.setLocalDescription(answerDescription);
+
+        const answer = {
+          type: answerDescription.type,
+          sdp: answerDescription.sdp,
+        };
+
+        peerConnection.addIceCandidate(new RTCIceCandidate(data.candidate));
+
+        peerConnection.onicecandidate = (event: any) => {
+          socket.emit("exchange-peer", {
+            roomId,
+            peerData: answer,
+            candidate: event?.candidate,
+          });
+        };
+      });
+
+      socket.on("peer-data", async (data: any) => {
+        const offerDescription = data?.peerData;
+        await peerConnection?.setRemoteDescription(
+          new RTCSessionDescription(offerDescription)
+        );
+        peerConnection?.addIceCandidate(new RTCIceCandidate(data?.candidate));
+      });
+    })();
+  }, [peerConnection, socket, roomId]);
 
   return (
     <section className="w-full  relative text-white  ">
@@ -90,7 +139,7 @@ const CallUI = () => {
         <div
           className={` ${
             drawerActive ? "w-[calc(100vw-500px)]" : "w-full"
-          } h-full   border-r relative transition-all ease-in-out duration-300  bg-gray-900 border-white  `}
+          } h-screen   border-r relative transition-all ease-in-out duration-300  bg-gray-900 border-white  `}
         >
           {/* <div className=" absolute top-1/2 left-1/2 bg-blue-500 h-60 rounded-full -translate-x-1/2 -translate-y-1/2 w-60 text-7xl text-center  flex items-center justify-center  ">
             LK
@@ -105,13 +154,18 @@ const CallUI = () => {
             }  transition-all ease-in-out object-cover duration-300 `}
             autoPlay={true}
           />
-          <video
+          {/* <video
             ref={remoteVideo}
             className={` ${
               remoteVideo?.current
                 ? "h-[10rem] absolute bottom-5 right-5 border-4 rounded-xl  bg-black   w-[18rem] "
                 : "h-screen  w-full"
             }  transition-all ease-in-out object-cover duration-300 `}
+            autoPlay={true}
+          /> */}
+          <video
+            ref={remoteVideo}
+            className={` h-screen  w-full  transition-all ease-in-out object-cover duration-300 `}
             autoPlay={true}
           />
         </div>
