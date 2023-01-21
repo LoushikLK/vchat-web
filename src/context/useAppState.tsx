@@ -38,7 +38,7 @@ const servers = {
 };
 
 // const socketServer = `ws://192.168.56.1:8000/`;
-const socketServer = `ws://vchat-server.onrender.com/`;
+const socketServer = `wss://vchat-server.onrender.com/`;
 
 const AppContext = createContext<APP_CONTEXT>(contextDefaultValues);
 type Props = {
