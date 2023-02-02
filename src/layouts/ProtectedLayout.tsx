@@ -8,12 +8,15 @@ import {
   MenuList,
 } from "@chakra-ui/react";
 import { ReactNode } from "react";
+import { useNavigate } from "react-router-dom";
 
 type Props = {
   children: ReactNode | ReactNode[];
 };
 
 const ProtectedLayout = ({ children }: Props) => {
+  const navigation = useNavigate();
+
   return (
     <div className="bg-gray-900 min-h-screen">
       <header className="w-full bg-blue-700">
@@ -33,6 +36,7 @@ const ProtectedLayout = ({ children }: Props) => {
                   <Button
                     colorScheme="messenger"
                     className="!w-full flex justify-start gap-4"
+                    onClick={() => navigation("/profile")}
                   >
                     <Avatar size={"xs"} />
                     <p className="text-xs font-medium w-full text-left  text-white">
