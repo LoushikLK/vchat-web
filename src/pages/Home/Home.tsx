@@ -1,4 +1,5 @@
 import { Button, Input } from "@chakra-ui/react";
+import { CreateRoom } from "components/home";
 import useAppState from "context/useAppState";
 import { useFetch } from "hooks";
 import { useState } from "react";
@@ -7,6 +8,7 @@ import { toast } from "react-toastify";
 
 const Home = () => {
   const [roomId, setRoomId] = useState("638c0fdc36f34b855b06afec");
+  const [createRoom, setCreateRoom] = useState(false);
 
   const { mutate } = useFetch();
 
@@ -33,9 +35,12 @@ const Home = () => {
   };
 
   return (
-    <section className="min-h-[90vh] flex items-center justify-center ">
-      <div className="flex flex-col gap-4">
-        <div className="flex items-center gap-4">
+    <section className="min-h-[90vh]  flex items-center justify-center ">
+      <div className="flex flex-col gap-4 bg-white rounded-lg p-4 items-center shadow-lg max-w-lg w-full ">
+        <h3 className="text-center text-blue-500 text-2xl font-semibold border-b pb-4 w-full mb-4">
+          Start A Chat
+        </h3>
+        <div className="flex items-center w-full gap-4">
           <Input
             placeholder="Enter join Id"
             value={roomId}
@@ -46,8 +51,10 @@ const Home = () => {
             Join Room
           </Button>
         </div>
-        <Button colorScheme="messenger">Create Room</Button>
-        <Button colorScheme="messenger">Join Random</Button>
+        <CreateRoom />
+        <Button colorScheme="messenger" className="!w-full">
+          Join Random
+        </Button>
       </div>
     </section>
   );

@@ -1,5 +1,12 @@
 import { ChevronDownIcon } from "@chakra-ui/icons";
-import { Button, Menu, MenuButton, MenuItem, MenuList } from "@chakra-ui/react";
+import {
+  Avatar,
+  Button,
+  Menu,
+  MenuButton,
+  MenuItem,
+  MenuList,
+} from "@chakra-ui/react";
 import { ReactNode } from "react";
 
 type Props = {
@@ -8,7 +15,7 @@ type Props = {
 
 const ProtectedLayout = ({ children }: Props) => {
   return (
-    <>
+    <div className="bg-gray-900 min-h-screen">
       <header className="w-full bg-blue-700">
         <div className="flex h-16 items-center justify-between px-4  ">
           <h1 className="hidden text-xl lg:block text-white ">Welcome Back!</h1>
@@ -23,26 +30,38 @@ const ProtectedLayout = ({ children }: Props) => {
               </MenuButton>
               <MenuList>
                 <MenuItem>
-                  <h4 className="text-sm">lk</h4>
+                  <Button
+                    colorScheme="messenger"
+                    className="!w-full flex justify-start gap-4"
+                  >
+                    <Avatar size={"xs"} />
+                    <p className="text-xs font-medium w-full text-left  text-white">
+                      Loushik
+                    </p>
+                  </Button>
                 </MenuItem>
                 <MenuItem>
-                  <p className="text-xs font-medium text-gray-600">lk@lk.com</p>
-                </MenuItem>
-                <MenuItem>
-                  <p className="text-xs font-medium text-gray-600">
-                    Change Password
+                  <p className="text-xs px-4 font-medium text-gray-600">
+                    lk@lk.com
                   </p>
                 </MenuItem>
                 <MenuItem>
-                  <p className="text-xs font-medium text-red-600">Logout</p>
+                  <p className="text-xs px-4 font-medium text-gray-600">
+                    Change Password
+                  </p>
+                </MenuItem>
+                <MenuItem className="hover:!bg-red-500 group ">
+                  <p className="text-xs px-4 font-medium group-hover:text-white text-red-600">
+                    Logout
+                  </p>
                 </MenuItem>
               </MenuList>
             </Menu>
           </div>
         </div>
       </header>
-      <main>{children}</main>
-    </>
+      <main className=" ">{children}</main>
+    </div>
   );
 };
 
