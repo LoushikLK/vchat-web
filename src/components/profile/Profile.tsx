@@ -1,28 +1,5 @@
 import { Avatar } from "@chakra-ui/react";
 
-const additionalInfo = [
-  {
-    id: 0,
-    title: "Joined",
-    count: "22-Jan-2022",
-  },
-  {
-    id: 5,
-    title: "Role",
-    count: "User",
-  },
-  {
-    id: 1,
-    title: "Total Class Taken",
-    count: "62",
-  },
-  {
-    id: 2,
-    title: "Total assignment created",
-    count: "23",
-  },
-];
-
 const Profile = () => {
   return (
     <div className="w-full flex gap-2 flex-col items-center bg-white justify-center rounded-xl shadow-[rgba(50,_50,_105,_0.15)_0px_2px_5px_0px,_rgba(0,_0,_0,_0.05)_0px_1px_1px_0px] border pt-8 pb-5">
@@ -37,19 +14,20 @@ const Profile = () => {
         <p className="text-theme">dillipsir@gmail.com</p>
       </div>
       <div className="flex flex-col w-full pt-4">
-        {additionalInfo?.map((item) => (
-          <div
-            key={item.id}
-            className={`flex px-5 py-3 justify-between items-center w-full    ${
-              item?.id === 1 ? "border-t border-b" : "border-b"
-            }`}
-          >
-            <p className="text-themeDarkBlue font-semibold ">{item?.title}</p>
-            <p className="text-themeSecondary font-semibold text-sm">
-              {item?.count}
-            </p>
-          </div>
-        ))}
+        <div
+          className={`flex px-5 py-3 justify-between items-center w-full border-b
+            `}
+        >
+          <p className=" font-semibold ">Joined</p>
+          <p className=" font-semibold text-sm">12 jan 2022</p>
+        </div>
+        <div
+          className={`flex px-5 py-3 justify-between items-center w-full border-b
+            `}
+        >
+          <p className=" font-semibold ">eee</p>
+          <p className=" font-semibold text-sm">fvifri fberbfrb</p>
+        </div>
       </div>
     </div>
   );

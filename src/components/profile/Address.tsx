@@ -1,4 +1,4 @@
-import { Button, FormControl, Input } from "@chakra-ui/react";
+import { Button, FormControl, FormErrorMessage, Input } from "@chakra-ui/react";
 import { Field, Form, Formik } from "formik";
 import { useState } from "react";
 import * as Yup from "yup";
@@ -93,11 +93,7 @@ const Address = () => {
   const handleUpdateAddress = async (values: any) => {
     console.log(values);
   };
-  const [countryDetails, setCountryDetails] = useState({
-    code: "GB",
-    label: "United Kingdom",
-    phone: "44",
-  });
+
   const initialValues = ProfileInfoSchema.reduce(
     (accumulator: any, currentValue: any) => {
       accumulator[currentValue?.name] = currentValue.initialValue;
@@ -140,30 +136,26 @@ const Address = () => {
                             <p className="tracking-wider font-semibold pb-2">
                               {inputItem.label}
                             </p>
-                            <Input
-                              required={inputItem?.required}
-                              placeholder={inputItem.placeholder}
-                              type={inputItem.type as any}
-                              className={`w-full ${
-                                inputItem.type === "textArea" && "mui-multi-row"
-                              }`}
-                              error={Boolean(
+                            <FormControl
+                              isInvalid={Boolean(
                                 props.meta.touched && props.meta.error
                               )}
-                              helperText={
-                                props.meta.touched && props.meta.error
-                              }
-                              InputProps={
-                                {
-                                  classes: {
-                                    notchedOutline: "notchedOutline",
-                                    input: "input-field",
-                                  },
-                                  readOnly: !edit,
-                                } as any
-                              }
-                              {...(props.field as any)}
-                            />
+                            >
+                              <Input
+                                variant="filled"
+                                placeholder={inputItem.placeholder}
+                                type={inputItem.type as any}
+                                name={inputItem?.name}
+                                errorBorderColor="red"
+                                onChange={formik?.handleChange}
+                                onBlur={formik?.handleBlur}
+                                value={props?.field?.value}
+                                isReadOnly={!edit}
+                              />
+                              <FormErrorMessage>
+                                {props.meta.touched && props.meta.error}
+                              </FormErrorMessage>
+                            </FormControl>
                           </div>
                         );
                       }}
@@ -173,23 +165,20 @@ const Address = () => {
                     {edit ? (
                       <>
                         <Button
-                          className="!bg-green-500 hover:ring-green-500 "
+                          className="!bg-green-500 hover:ring-green-500  !text-white "
                           onClick={() => setEdit(false)}
                         >
                           Save
                         </Button>
                         <Button
-                          className="!bg-red-500 hover:ring-red-500 "
+                          className="!bg-red-500 hover:ring-red-500 !text-white "
                           onClick={() => setEdit(false)}
                         >
                           Cancel
                         </Button>
                       </>
                     ) : (
-                      <Button onClick={() => setEdit(!edit)}>
-                        {/* <Edit /> */}
-                        Edit
-                      </Button>
+                      <Button onClick={() => setEdit(!edit)}>Edit</Button>
                     )}
                   </div>
                 </Form>
