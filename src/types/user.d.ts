@@ -24,4 +24,5 @@ export default interface UserType {
     LONG: string;
     LAT: string;
   };
+  createdAt?: string;
 }

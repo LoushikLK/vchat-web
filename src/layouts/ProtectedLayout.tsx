@@ -7,6 +7,7 @@ import {
   MenuItem,
   MenuList,
 } from "@chakra-ui/react";
+import useAppState from "context/useAppState";
 import { ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -16,6 +17,8 @@ type Props = {
 
 const ProtectedLayout = ({ children }: Props) => {
   const navigation = useNavigate();
+
+  const { user } = useAppState();
 
   return (
     <div className="bg-gray-900 min-h-screen">
@@ -38,19 +41,22 @@ const ProtectedLayout = ({ children }: Props) => {
                     className="!w-full flex justify-start gap-4"
                     onClick={() => navigation("/profile")}
                   >
-                    <Avatar size={"xs"} />
+                    <Avatar size={"xs"} src={user?.photoUrl} />
                     <p className="text-xs font-medium w-full text-left  text-white">
-                      Loushik
+                      {user?.displayName}
                     </p>
                   </Button>
                 </MenuItem>
                 <MenuItem>
                   <p className="text-xs px-4 font-medium text-gray-600">
-                    lk@lk.com
+                    {user?.email}
                   </p>
                 </MenuItem>
                 <MenuItem>
-                  <p className="text-xs px-4 font-medium text-gray-600">
+                  <p
+                    className="text-xs px-4 font-medium text-gray-600"
+                    onClick={() => navigation("/change-password")}
+                  >
                     Change Password
                   </p>
                 </MenuItem>

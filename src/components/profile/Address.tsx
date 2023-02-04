@@ -1,6 +1,15 @@
-import { Button, FormControl, FormErrorMessage, Input } from "@chakra-ui/react";
+import {
+  Button,
+  FormControl,
+  FormErrorMessage,
+  Input,
+  Select,
+} from "@chakra-ui/react";
+import useAppState from "context/useAppState";
 import { Field, Form, Formik } from "formik";
-import { useState } from "react";
+import { useFetch } from "hooks";
+import { Dispatch, useState } from "react";
+import { toast } from "react-toastify";
 import * as Yup from "yup";
 
 const ProfileInfoSchema = [
@@ -42,56 +51,80 @@ const ProfileInfoSchema = [
     lg: "col-span-12 lg:col-span-6",
   },
   {
-    key: "3",
-    label: "Country Code",
-    name: "countryCode",
-    placeholder: "Choose Your Country",
-    type: "text",
-    validationSchema: Yup.string().required("required"),
-    initialValue: "India",
-    required: true,
-    lg: "col-span-12",
-  },
-
-  {
     key: "5",
-    label: "State Name",
-    name: "stateName",
-    placeholder: "Enter State Name",
-    type: "text",
+    label: "Gender",
+    name: "gender",
+    placeholder: "Choose Gender",
+    type: "select",
     validationSchema: Yup.string().required("required"),
-    initialValue: "Demo state",
+    initialValue: "",
     required: true,
     lg: "col-span-12 lg:col-span-6",
   },
   {
     key: "6",
-    label: "City",
-    name: "city",
-    placeholder: "Enter City Name",
-    type: "text",
-    validationSchema: Yup.string().required("required"),
-    initialValue: "Demo city 1",
-    required: true,
-    lg: "col-span-12 lg:col-span-6",
-  },
-  {
-    key: "7",
-    label: "Zip Code",
-    name: "zip",
-    placeholder: "Enter Zip",
-    type: "text",
-    validationSchema: Yup.string().required("required"),
-    initialValue: "423523",
+    label: "Date Of Birth",
+    name: "dateOfBirth",
+    placeholder: "Choose Date Of Birth",
+    type: "date",
+    validationSchema: Yup.string(),
+    initialValue: "",
     required: true,
     lg: "col-span-12 lg:col-span-6",
   },
 ];
-const Address = () => {
+const Address = ({
+  setUserImage,
+  userImage,
+}: {
+  userImage: any;
+  setUserImage: Dispatch<any>;
+}) => {
+  const { user } = useAppState();
+
+  const { mutate } = useFetch();
+
   const [edit, setEdit] = useState(false);
 
   const handleUpdateAddress = async (values: any) => {
-    console.log(values);
+    try {
+      let data = await toast.promise(
+        new Promise(async (resolve, reject) => {
+          try {
+            const formData = new FormData();
+            formData?.append("photo", userImage);
+            formData?.append("displayName", values?.name);
+            formData?.append("gender", values?.gender);
+            formData?.append("dateOfBirth", values?.dateOfBirth);
+            formData?.append("phoneNumber", values?.phoneNumber);
+
+            const res = await mutate({
+              path: "update-profile",
+              method: "PUT",
+              body: formData,
+              isFormData: true,
+            });
+
+            if (res?.status !== 200) throw new Error(res?.data?.error);
+
+            resolve(res);
+          } catch (error) {
+            reject(error);
+          }
+        }),
+        {
+          pending: "Updating data...",
+          success: "Data updated successfully",
+          error: "Data update failed",
+        }
+      );
+
+      console.log({ data });
+    } catch (error) {
+      if (error instanceof Error) {
+        toast.error(error.message);
+      }
+    }
   };
 
   const initialValues = ProfileInfoSchema.reduce(
@@ -119,7 +152,14 @@ const Address = () => {
           <div className="flex flex-col w-full pt-8 gap-3">
             <Formik
               enableReinitialize
-              initialValues={initialValues}
+              initialValues={{
+                ...initialValues,
+                name: user?.displayName,
+                email: user?.email,
+                phoneNumber: user?.phoneNumber,
+                gender: user?.gender,
+                dateOfBirth: user?.dateOfBirth,
+              }}
               validationSchema={Yup.object(validationSchema)}
               onSubmit={handleUpdateAddress}
             >
@@ -141,17 +181,38 @@ const Address = () => {
                                 props.meta.touched && props.meta.error
                               )}
                             >
-                              <Input
-                                variant="filled"
-                                placeholder={inputItem.placeholder}
-                                type={inputItem.type as any}
-                                name={inputItem?.name}
-                                errorBorderColor="red"
-                                onChange={formik?.handleChange}
-                                onBlur={formik?.handleBlur}
-                                value={props?.field?.value}
-                                isReadOnly={!edit}
-                              />
+                              {inputItem?.type === "select" ? (
+                                <Select
+                                  placeholder="Select Gender"
+                                  name={inputItem?.name}
+                                  errorBorderColor="red"
+                                  onChange={formik?.handleChange}
+                                  onBlur={formik?.handleBlur}
+                                  value={props?.field?.value}
+                                  isReadOnly={!edit}
+                                  isDisabled={!edit}
+                                >
+                                  <option value="MALE">Male</option>
+                                  <option value="FEMALE">Female</option>
+                                  <option value="OTHER">Other</option>
+                                  <option value="NONE">Not Specified</option>
+                                </Select>
+                              ) : (
+                                <Input
+                                  variant="filled"
+                                  placeholder={inputItem.placeholder}
+                                  type={inputItem.type as any}
+                                  name={inputItem?.name}
+                                  errorBorderColor="red"
+                                  onChange={formik?.handleChange}
+                                  onBlur={formik?.handleBlur}
+                                  value={props?.field?.value}
+                                  isReadOnly={
+                                    inputItem?.name === "email" ? true : !edit
+                                  }
+                                />
+                              )}
+
                               <FormErrorMessage>
                                 {props.meta.touched && props.meta.error}
                               </FormErrorMessage>
