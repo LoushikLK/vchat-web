@@ -22,7 +22,7 @@ const ProfileInfoSchema = [
     validationSchema: Yup.string()
       .required("required")
       .min(2, "Name must be at least 2 characters"),
-    initialValue: "Alexa",
+    initialValue: "",
     required: true,
     lg: "col-span-6",
   },
@@ -33,7 +33,7 @@ const ProfileInfoSchema = [
     placeholder: "Enter Your Phone Number",
     type: "number",
     validationSchema: Yup.number().required("required"),
-    initialValue: "23049237532",
+    initialValue: "",
     required: true,
     lg: "col-span-6",
   },
@@ -46,7 +46,7 @@ const ProfileInfoSchema = [
     validationSchema: Yup.string()
       .required("required")
       .email("Invalid Email Address"),
-    initialValue: "alexacarter@gmail.com",
+    initialValue: "",
     required: true,
     lg: "col-span-12 lg:col-span-6",
   },
@@ -88,7 +88,7 @@ const Address = ({
 
   const handleUpdateAddress = async (values: any) => {
     try {
-      let data = await toast.promise(
+      await toast.promise(
         new Promise(async (resolve, reject) => {
           try {
             const formData = new FormData();
@@ -96,7 +96,7 @@ const Address = ({
             formData?.append("displayName", values?.name);
             formData?.append("gender", values?.gender);
             formData?.append("dateOfBirth", values?.dateOfBirth);
-            formData?.append("phoneNumber", values?.phoneNumber);
+            formData?.append("phoneNumber", values?.phone);
 
             const res = await mutate({
               path: "update-profile",
@@ -106,6 +106,7 @@ const Address = ({
             });
 
             if (res?.status !== 200) throw new Error(res?.data?.error);
+            setEdit(false);
 
             resolve(res);
           } catch (error) {
@@ -113,13 +114,11 @@ const Address = ({
           }
         }),
         {
-          pending: "Updating data...",
-          success: "Data updated successfully",
+          pending: "Updating user data...",
+          success: "User updated successfully",
           error: "Data update failed",
         }
       );
-
-      console.log({ data });
     } catch (error) {
       if (error instanceof Error) {
         toast.error(error.message);
@@ -156,7 +155,7 @@ const Address = ({
                 ...initialValues,
                 name: user?.displayName,
                 email: user?.email,
-                phoneNumber: user?.phoneNumber,
+                phone: user?.phoneNumber,
                 gender: user?.gender,
                 dateOfBirth: user?.dateOfBirth,
               }}
@@ -204,8 +203,8 @@ const Address = ({
                                   type={inputItem.type as any}
                                   name={inputItem?.name}
                                   errorBorderColor="red"
-                                  onChange={formik?.handleChange}
-                                  onBlur={formik?.handleBlur}
+                                  onChange={props?.field?.onChange}
+                                  onBlur={props?.field?.onBlur}
                                   value={props?.field?.value}
                                   isReadOnly={
                                     inputItem?.name === "email" ? true : !edit
@@ -227,7 +226,7 @@ const Address = ({
                       <>
                         <Button
                           className="!bg-green-500 hover:ring-green-500  !text-white "
-                          onClick={() => setEdit(false)}
+                          onClick={() => formik?.handleSubmit()}
                         >
                           Save
                         </Button>

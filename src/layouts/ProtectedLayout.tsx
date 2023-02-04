@@ -8,8 +8,10 @@ import {
   MenuList,
 } from "@chakra-ui/react";
 import useAppState from "context/useAppState";
+import { useFetch } from "hooks";
 import { ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 
 type Props = {
   children: ReactNode | ReactNode[];
@@ -19,6 +21,44 @@ const ProtectedLayout = ({ children }: Props) => {
   const navigation = useNavigate();
 
   const { user } = useAppState();
+
+  const { mutate } = useFetch();
+
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    try {
+      await toast.promise(
+        new Promise(async (resolve, reject) => {
+          try {
+            const res = await mutate({
+              path: "auth/logout",
+              method: "PUT",
+            });
+
+            if (res?.status !== 200) throw new Error(res?.data?.error);
+
+            localStorage.setItem("ACCESS_TOKEN", "");
+            window.location.reload();
+            // navigate("/");
+
+            resolve(res);
+          } catch (error) {
+            reject(error);
+          }
+        }),
+        {
+          pending: "Logging out...",
+          success: "Logged out successfully",
+          error: "Log out failed",
+        }
+      );
+    } catch (error) {
+      if (error instanceof Error) {
+        toast.error(error.message);
+      }
+    }
+  };
 
   return (
     <div className="bg-gray-900 min-h-screen">
@@ -60,7 +100,10 @@ const ProtectedLayout = ({ children }: Props) => {
                     Change Password
                   </p>
                 </MenuItem>
-                <MenuItem className="hover:!bg-red-500 group ">
+                <MenuItem
+                  className="hover:!bg-red-500 group "
+                  onClick={handleLogout}
+                >
                   <p className="text-xs px-4 font-medium group-hover:text-white text-red-600">
                     Logout
                   </p>
