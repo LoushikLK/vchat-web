@@ -16,3 +16,20 @@
     @apply transition-all duration-200 hover:scale-110 ease-in-out;
   }
 }
+
+* {
+  scrollbar-width: none;
+  scrollbar-color: #119ad9 transparent;
+  scroll-behavior: smooth;
+}
+::-webkit-scrollbar {
+  width: 0.25em;
+  height: 0.25em;
+}
+::-webkit-scrollbar-thumb {
+  background-color: #119ad9;
+  border-radius: 10em;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
