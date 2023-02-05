@@ -57,6 +57,12 @@ const CallUI = () => {
   useEffect(() => {
     (async () => {
       try {
+        //this socket will be removed just for testing
+        socket.emit("join-new-room", {
+          roomId,
+          userId: user?._id,
+        });
+
         let response = await mutate({
           path: `/room/${roomId}`,
           method: "GET",
