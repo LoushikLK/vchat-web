@@ -179,7 +179,7 @@ const CallUI = () => {
             drawerActive ? "w-[500px]" : "w-0 hidden"
           } h-full   transition-all ease-in-out duration-300 `}
         >
-          <VideoChat />
+          <VideoChat roomId={roomId} />
         </div>
         <div className="w-fit z-50 fixed bottom-12 left-1/2 -translate-x-1/2 ">
           <div className="flex items-center gap-4  p-4 bg-blue-500/50  rounded-md shadow-lg">

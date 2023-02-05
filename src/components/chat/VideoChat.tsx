@@ -1,12 +1,51 @@
 import { Avatar, Button, Input } from "@chakra-ui/react";
 import useAppState from "context/useAppState";
+import { useFetch } from "hooks";
+import { useEffect, useState } from "react";
+import { toast } from "react-toastify";
 
-const VideoChat = () => {
-  const { navbarHight } = useAppState();
+const VideoChat = ({ roomId }: { roomId?: string }) => {
+  const { navbarHight, socket } = useAppState();
+
+  const [typeMessage, setTypeMessage] = useState("");
+
+  const { mutate } = useFetch();
+
+  useEffect(() => {}, [socket]);
+
+  const handleSend = async (refId?: string) => {
+    try {
+      let trimMessage = typeMessage?.trim();
+
+      if (!trimMessage?.length) return;
+
+      let formData = new FormData();
+
+      formData?.append("message", trimMessage);
+      if (refId) {
+        formData?.append("ref", trimMessage);
+      }
+
+      const res = await mutate({
+        path: `send-message/${roomId}`,
+        method: "POST",
+        body: formData,
+        isFormData: true,
+      });
+
+      if (res?.status !== 200) throw new Error(res?.data?.error);
+      setTypeMessage("");
+    } catch (error) {
+      if (error instanceof Error) {
+        toast.error(error.message);
+      }
+    }
+  };
+
   return (
     <div
       style={{
-        height: `100vh-${navbarHight}`,
+        height: `${window.innerHeight - navbarHight}px`,
       }}
       className="w-full relative h-full bg-gray-900"
     >
@@ -38,8 +77,14 @@ const VideoChat = () => {
         </div>
       </div>
       <div className="absolute right-0 bottom-0 flex items-center gap-4 p-4 w-full bg-blue-900 ">
-        <Input placeholder="Type message..." />{" "}
-        <Button className="!bg-blue-500">Send</Button>
+        <Input
+          placeholder="Type message..."
+          onChange={(e) => setTypeMessage(e?.target?.value)}
+          value={typeMessage}
+        />{" "}
+        <Button className="!bg-blue-500" onClick={() => handleSend()}>
+          Send
+        </Button>
       </div>
     </div>
   );
