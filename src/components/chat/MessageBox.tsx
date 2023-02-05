@@ -41,13 +41,13 @@ const MessageBox = ({
             {formatDate(message?.createdAt, "time")}
           </small>
         </span>
-        <Avatar size={"sm"} src={message?.sendBy?.photoUrl} />
+        <Avatar size={"sm"} src={message?.sendBy?.photoUrl} loading="lazy" />
       </div>
     );
   } else {
     return (
       <div className="w-full flex items-start gap-2 p-4 " key={message?._id}>
-        <Avatar size={"sm"} src={message?.sendBy?.photoUrl} />
+        <Avatar size={"sm"} src={message?.sendBy?.photoUrl} loading="lazy" />
         <span className="flex flex-col gap-1  max-w-[70%] justify-end ">
           <small className="tracking-wide bg-blue-500 rounded-r-full rounded-bl-full p-2">
             {message?.message}
