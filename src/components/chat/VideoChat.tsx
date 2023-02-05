@@ -1,8 +1,15 @@
 import { Avatar, Button, Input } from "@chakra-ui/react";
+import useAppState from "context/useAppState";
 
 const VideoChat = () => {
+  const { navbarHight } = useAppState();
   return (
-    <div className="w-full relative min-h-screen bg-gray-900">
+    <div
+      style={{
+        height: `100vh-${navbarHight}`,
+      }}
+      className="w-full relative h-full bg-gray-900"
+    >
       <h3 className="font-medium tracking-wide text-lg p-4 bg-blue-900 ">
         Live Chat
       </h3>

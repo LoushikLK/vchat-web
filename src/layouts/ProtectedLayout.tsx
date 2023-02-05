@@ -9,7 +9,7 @@ import {
 } from "@chakra-ui/react";
 import useAppState from "context/useAppState";
 import { useFetch } from "hooks";
-import { ReactNode } from "react";
+import { ReactNode, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 
@@ -20,9 +20,18 @@ type Props = {
 const ProtectedLayout = ({ children }: Props) => {
   const navigation = useNavigate();
 
-  const { user } = useAppState();
+  const { user, setNavbarHeight } = useAppState();
 
   const { mutate } = useFetch();
+
+  const navBar = useRef<any>(null);
+
+  useEffect(() => {
+    if (navBar?.current) {
+      let height = navBar?.current?.clientHeight;
+      setNavbarHeight(height);
+    }
+  }, [navBar?.current]);
 
   const navigate = useNavigate();
 
@@ -62,7 +71,7 @@ const ProtectedLayout = ({ children }: Props) => {
 
   return (
     <div className="bg-gray-900 min-h-screen">
-      <header className="w-full bg-blue-700">
+      <header className="w-full bg-blue-700" ref={navBar}>
         <div className="flex h-16 items-center justify-between px-4  ">
           <h1 className="hidden text-xl lg:block text-white ">Welcome Back!</h1>
           <div className="flex items-center gap-6">

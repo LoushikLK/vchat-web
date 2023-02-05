@@ -20,6 +20,8 @@ type APP_CONTEXT = {
   user: UserType | null;
   setUser: (arg: UserType) => void;
   socket?: any;
+  navbarHight: number;
+  setNavbarHeight: (arg: number) => void;
 };
 
 const servers = {
@@ -49,6 +51,7 @@ export const AppContextProvider = ({ children }: Props) => {
   const [appLoading, setAppLoading] = useState(true);
   const [user, setUser] = useState<UserType | null>(null);
   const peerConnection = useRef<RTCPeerConnection | null>(null);
+  const [navbarHight, setNavbarHeight] = useState(0);
 
   const socket = useRef<any>(null);
 
@@ -104,6 +107,8 @@ export const AppContextProvider = ({ children }: Props) => {
         user,
         setUser,
         socket: socket?.current,
+        setNavbarHeight,
+        navbarHight,
       }}
     >
       {children}
@@ -112,8 +117,15 @@ export const AppContextProvider = ({ children }: Props) => {
 };
 
 const useAppState = () => {
-  const { appLoading, peerConnection, user, setUser, socket } =
-    useContext(AppContext);
+  const {
+    appLoading,
+    peerConnection,
+    user,
+    setUser,
+    socket,
+    setNavbarHeight,
+    navbarHight,
+  } = useContext(AppContext);
 
   return {
     appLoading,
@@ -121,6 +133,8 @@ const useAppState = () => {
     user,
     setUser,
     socket,
+    setNavbarHeight,
+    navbarHight,
   };
 };
 

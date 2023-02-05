@@ -19,7 +19,7 @@ const CallUI = () => {
 
   const { roomId } = useParams();
 
-  const { peerConnection, socket, user } = useAppState();
+  const { peerConnection, socket, user, navbarHight } = useAppState();
 
   const { mutate } = useFetch();
 
@@ -139,43 +139,46 @@ const CallUI = () => {
         <div
           className={` ${
             drawerActive ? "w-[calc(100vw-500px)]" : "w-full"
-          } h-screen   border-r relative transition-all ease-in-out duration-300  bg-gray-900 border-white  `}
+          }    border-r relative transition-all ease-in-out duration-300 h-full bg-gray-900 border-white  `}
         >
-          {/* <div className=" absolute top-1/2 left-1/2 bg-blue-500 h-60 rounded-full -translate-x-1/2 -translate-y-1/2 w-60 text-7xl text-center  flex items-center justify-center  ">
-            LK
-          </div> */}
+          {!myVideoRef?.current && (
+            <div className=" absolute top-1/2 left-1/2 bg-blue-500 h-60 rounded-full -translate-x-1/2 -translate-y-1/2 w-60 text-7xl text-center  flex items-center justify-center  ">
+              LK
+            </div>
+          )}
 
           <video
             ref={myVideoRef}
+            style={{
+              height: remoteVideo?.current
+                ? "10rem"
+                : `${window.innerHeight - navbarHight}px`,
+              width: remoteVideo?.current ? "18rem" : `100%`,
+            }}
             className={` ${
-              remoteVideo
-                ? "h-[10rem] absolute bottom-5 right-5 border-4 rounded-xl  bg-black   w-[18rem] "
-                : "h-screen  w-full"
+              remoteVideo?.current
+                ? " absolute bottom-5 right-5 border-4 rounded-xl  bg-black "
+                : "  w-full"
             }  transition-all ease-in-out object-cover duration-300 `}
             autoPlay={true}
           />
-          {/* <video
-            ref={remoteVideo}
-            className={` ${
-              remoteVideo?.current
-                ? "h-[10rem] absolute bottom-5 right-5 border-4 rounded-xl  bg-black   w-[18rem] "
-                : "h-screen  w-full"
-            }  transition-all ease-in-out object-cover duration-300 `}
-            autoPlay={true}
-          /> */}
           <video
             ref={remoteVideo}
-            className={` h-screen  w-full  transition-all ease-in-out object-cover duration-300 `}
+            className={` ${
+              remoteVideo?.current ? "h-[90vh]  w-full" : "block"
+            }  transition-all ease-in-out object-cover duration-300 `}
             autoPlay={true}
           />
         </div>
 
         <div
+          style={{
+            height: `${window.innerHeight - navbarHight}px`,
+          }}
           className={` ${
             drawerActive ? "w-[500px]" : "w-0 hidden"
-          } h-full min-h-screen  transition-all ease-in-out duration-300 `}
+          } h-full   transition-all ease-in-out duration-300 `}
         >
-          {" "}
           <VideoChat />
         </div>
         <div className="w-fit z-50 fixed bottom-12 left-1/2 -translate-x-1/2 ">
@@ -185,9 +188,13 @@ const CallUI = () => {
                 <People className="text-gray-900 text-4xl p-2 " />
               </span>
             </Button>
-            <Button>
+            <Button onClick={() => setDrawerActive(!drawerActive)}>
               <span>
-                <ChatOutlined className="text-gray-900 p-2 text-4xl " />
+                <ChatOutlined
+                  className={` ${
+                    drawerActive ? "text-blue-500 " : "text-gray-900"
+                  }  p-2 text-4xl `}
+                />
               </span>
             </Button>
             <Button>
