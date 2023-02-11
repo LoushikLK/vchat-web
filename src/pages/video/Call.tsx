@@ -7,6 +7,7 @@ import {
   VideoOutlined,
 } from "assets/Icons";
 import { VideoChat } from "components/chat";
+import { ChatUser } from "components/user";
 import useAppState from "context/useAppState";
 import { useFetch, useMounted } from "hooks";
 import { useEffect, useRef, useState } from "react";
@@ -14,7 +15,8 @@ import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
 
 const CallUI = () => {
-  const [drawerActive, setDrawerActive] = useState(true);
+  const [drawerActive, setDrawerActive] = useState(false);
+  const [userActiveDrawer, setUserActiveDrawer] = useState(false);
   const [roomData, setRoomData] = useState<any>(null);
 
   const { roomId } = useParams();
@@ -110,9 +112,13 @@ const CallUI = () => {
   };
 
   useEffect(() => {
-    window.addEventListener("beforeunload", handleWindowUnload);
+    window.addEventListener("beforeunload", handleWindowUnload, {
+      capture: true,
+    });
     return () => {
-      window.removeEventListener("beforeunload", handleWindowUnload);
+      window.removeEventListener("beforeunload", handleWindowUnload, {
+        capture: true,
+      });
     };
   }, []);
 
@@ -158,6 +164,7 @@ const CallUI = () => {
 
   return (
     <section className="w-full  relative text-white  ">
+      <ChatUser active={userActiveDrawer} roomId={roomId} />
       <div className="w-full  flex">
         <div
           className={` ${
@@ -204,14 +211,29 @@ const CallUI = () => {
         >
           <VideoChat roomId={roomId} />
         </div>
+
         <div className="w-fit z-50 fixed bottom-12 left-1/2 -translate-x-1/2 ">
           <div className="flex items-center gap-4  p-4 bg-blue-500/50  rounded-md shadow-lg">
-            <Button>
+            <Button
+              onClick={() => {
+                setUserActiveDrawer(!userActiveDrawer);
+                setDrawerActive(false);
+              }}
+            >
               <span>
-                <People className="text-gray-900 text-4xl p-2 " />
+                <People
+                  className={`${
+                    userActiveDrawer ? "text-blue-500 " : "text-gray-900"
+                  } text-4xl p-2 `}
+                />
               </span>
             </Button>
-            <Button onClick={() => setDrawerActive(!drawerActive)}>
+            <Button
+              onClick={() => {
+                setDrawerActive(!drawerActive);
+                setUserActiveDrawer(false);
+              }}
+            >
               <span>
                 <ChatOutlined
                   className={` ${
