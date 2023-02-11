@@ -10,7 +10,7 @@ import { VideoChat } from "components/chat";
 import useAppState from "context/useAppState";
 import { useFetch, useMounted } from "hooks";
 import { useEffect, useRef, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
 
 const CallUI = () => {
@@ -20,6 +20,8 @@ const CallUI = () => {
   const { roomId } = useParams();
 
   const { peerConnection, socket, user, navbarHight } = useAppState();
+
+  const navigate = useNavigate();
 
   const { mutate } = useFetch();
 
@@ -57,20 +59,22 @@ const CallUI = () => {
   useEffect(() => {
     (async () => {
       try {
-        //this socket will be removed just for testing
-        socket.emit("join-new-room", {
-          roomId,
-          userId: user?._id,
-        });
-
         let response = await mutate({
           path: `/room/${roomId}`,
           method: "GET",
         });
 
-        if (response?.data?.error) throw new Error(response?.data?.error);
+        if (response?.data?.error) {
+          throw new Error(response?.data?.error);
+        }
 
         setRoomData(response?.data?.data);
+
+        //this socket will be removed just for testing
+        socket.emit("join-new-room", {
+          roomId,
+          userId: user?._id,
+        });
 
         if (!peerConnection) return;
 
@@ -94,10 +98,23 @@ const CallUI = () => {
       } catch (error) {
         if (error instanceof Error) {
           toast.error(error?.message);
+          navigate("/");
         }
       }
     })();
   }, [roomId, isMounted, peerConnection]);
+
+  const handleWindowUnload = (event: any) => {
+    event.preventDefault();
+    peerConnection?.close();
+  };
+
+  useEffect(() => {
+    window.addEventListener("beforeunload", handleWindowUnload);
+    return () => {
+      window.removeEventListener("beforeunload", handleWindowUnload);
+    };
+  }, []);
 
   useEffect(() => {
     (async () => {

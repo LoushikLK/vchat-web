@@ -7,7 +7,7 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 
 const Home = () => {
-  const [roomId, setRoomId] = useState("638c0fdc36f34b855b06afec");
+  const [roomId, setRoomId] = useState("63e73dd6921d2b7f7ed33cd5");
   const [createRoom, setCreateRoom] = useState(false);
 
   const { mutate } = useFetch();
@@ -21,10 +21,14 @@ const Home = () => {
       if (!roomId) throw new Error("Enter a valid room Id");
 
       const res = await mutate({
-        path: "join/" + roomId,
-        method: "POST",
+        path: "room/join/" + roomId,
+        method: "PUT",
       });
       if (res?.status !== 200) throw new Error(res?.data?.error);
+      if (!res?.data?.data?.data?.joined) {
+        toast.success(res?.data?.message);
+        return;
+      }
       toast.success(res?.data?.message);
       navigation(`/call/${roomId}`);
     } catch (error) {
