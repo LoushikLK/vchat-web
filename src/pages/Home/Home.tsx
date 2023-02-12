@@ -7,8 +7,7 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 
 const Home = () => {
-  const [roomId, setRoomId] = useState("63e73dd6921d2b7f7ed33cd5");
-  const [createRoom, setCreateRoom] = useState(false);
+  const [roomId, setRoomId] = useState("63e87ce7c7fae66a55d23a6a");
 
   const { mutate } = useFetch();
 

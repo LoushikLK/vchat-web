@@ -74,6 +74,7 @@ const ProtectedLayout = ({ children }: Props) => {
       <header className="w-full bg-blue-700" ref={navBar}>
         <div className="flex h-16 items-center justify-between px-4  ">
           <h1 className="hidden text-xl lg:block text-white ">Welcome Back!</h1>
+          {user?._id}
           <div className="flex items-center gap-6">
             <Menu>
               <MenuButton

@@ -13,6 +13,7 @@ import {
   Select,
   useDisclosure,
 } from "@chakra-ui/react";
+import useAppState from "context/useAppState";
 import { useFormik } from "formik";
 import { useFetch } from "hooks";
 import { useNavigate } from "react-router-dom";
@@ -35,6 +36,8 @@ const CreateRoom = () => {
   const { mutate } = useFetch();
   const navigation = useNavigate();
 
+  const { socket } = useAppState();
+
   const formik = useFormik({
     initialValues: initialValue,
     validationSchema: validationSchema,
@@ -50,6 +53,9 @@ const CreateRoom = () => {
         });
         if (res?.status !== 200) throw new Error(res?.data?.error);
         toast.success(res?.data?.message);
+        socket.emit("room-created", {
+          roomId: res?.data?.data?.data?._id,
+        });
         navigation(`/call/${res?.data?.data?.data?._id}`);
       } catch (error) {
         if (error instanceof Error) {

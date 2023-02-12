@@ -13,15 +13,24 @@ import { useFetch, useMounted } from "hooks";
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
+import Peer from "simple-peer";
 
 const CallUI = () => {
+  const [peers, setPeers] = useState<any[]>([]);
+
+  const allPeople = useRef<any[]>([]);
+
+  const myVideoRef = useRef<any>(null);
+  const myStreamRef = useRef<any>(null);
+  const myPeerRef = useRef<any>(null);
+
   const [drawerActive, setDrawerActive] = useState(false);
   const [userActiveDrawer, setUserActiveDrawer] = useState(false);
   const [roomData, setRoomData] = useState<any>(null);
 
   const { roomId } = useParams();
 
-  const { peerConnection, socket, user, navbarHight } = useAppState();
+  const { socket, user, navbarHight } = useAppState();
 
   const navigate = useNavigate();
 
@@ -29,40 +38,14 @@ const CallUI = () => {
 
   const isMounted = useMounted();
 
-  const myVideoRef = useRef<any>(null);
   const remoteStream = useRef<any>(null);
   const remoteVideo = useRef<any>(null);
 
   useEffect(() => {
     (async () => {
-      if (!peerConnection) return;
-      const localVideoStream = await navigator.mediaDevices.getUserMedia({
-        video: true,
-        audio: true,
-      });
-
-      remoteStream.current = new MediaStream();
-
-      // Push tracks from local stream to peer connection
-      localVideoStream?.getTracks().forEach((track) => {
-        peerConnection?.addTrack(track, localVideoStream);
-      });
-      // Pull tracks from remote stream, add to video stream
-      peerConnection.ontrack = (event: any) => {
-        event.streams[0].getTracks().forEach((track: any) => {
-          remoteStream.current.addTrack(track);
-        });
-      };
-      myVideoRef.current.srcObject = localVideoStream;
-      remoteVideo.current.srcObject = remoteStream.current;
-    })();
-  }, [peerConnection]);
-
-  useEffect(() => {
-    (async () => {
       try {
         let response = await mutate({
-          path: `/room/${roomId}`,
+          path: `room/${roomId}`,
           method: "GET",
         });
 
@@ -70,33 +53,16 @@ const CallUI = () => {
           throw new Error(response?.data?.error);
         }
 
-        setRoomData(response?.data?.data);
+        setRoomData(response?.data?.data?.data);
 
-        //this socket will be removed just for testing
-        socket.emit("join-new-room", {
-          roomId,
-          userId: user?._id,
+        const localVideoStream = await navigator.mediaDevices.getUserMedia({
+          video: true,
+          audio: true,
         });
 
-        if (!peerConnection) return;
+        myStreamRef.current = localVideoStream;
 
-        // Create offer
-        const offerDescription = await peerConnection?.createOffer();
-        await peerConnection?.setLocalDescription(offerDescription);
-
-        const offer = {
-          sdp: offerDescription?.sdp,
-          type: offerDescription?.type,
-        };
-
-        peerConnection.onicecandidate = (event: any) => {
-          socket.emit("join-new-room", {
-            roomId,
-            userId: user?._id,
-            peerData: offer,
-            candidate: event?.candidate,
-          });
-        };
+        myVideoRef.current.srcObject = localVideoStream;
       } catch (error) {
         if (error instanceof Error) {
           toast.error(error?.message);
@@ -104,11 +70,81 @@ const CallUI = () => {
         }
       }
     })();
-  }, [roomId, isMounted, peerConnection]);
+  }, [roomId, isMounted]);
+
+  useEffect(() => {
+    if (!roomData?._id || !myStreamRef.current) return;
+
+    const myPeer = new Peer({
+      initiator: true,
+      trickle: false,
+      stream: myStreamRef.current,
+    });
+
+    myPeerRef.current = myPeer;
+
+    myPeer.on("signal", (signal) => {
+      socket.emit("join-new-room", {
+        roomId: roomData?._id,
+        signal,
+        userId: user?._id,
+      });
+    });
+  }, [socket, roomData?._id, myStreamRef.current]);
+
+  useEffect(() => {
+    socket.on("user-joined", (data: any) => {
+      if (!data?.userId) return;
+      setPeers((item: any) => {
+        return [
+          ...item?.filter((item: any) => item?.userId != data?.userId),
+          data,
+        ];
+      });
+    });
+
+    socket.on("exchange-peer", (data: any) => {
+      console.log({ data });
+      let user = allPeople?.current?.find((item: any) => {
+        return item?.userId === data?.userId;
+      });
+      console.log({ user });
+      user.peer.signal(data?.signal);
+    });
+  }, [socket]);
+
+  console.log({ allPeople });
+
+  useEffect(() => {
+    let allPeers = peers.map((item) => {
+      return addPeer(item?.signal, myStreamRef.current, item?.userId);
+    });
+    allPeople.current = allPeers;
+  }, [peers]);
+
+  const addPeer = (incomingSignal: any, stream: any, userId: string) => {
+    const peer = new Peer({
+      initiator: false,
+      trickle: false,
+      stream,
+    });
+
+    peer.on("signal", (signal) => {
+      console.log(userId);
+      socket.emit("reverse-signal", { signal, userId });
+    });
+
+    peer.signal(incomingSignal);
+
+    return {
+      peer,
+      userId,
+    };
+  };
 
   const handleWindowUnload = (event: any) => {
     event.preventDefault();
-    peerConnection?.close();
+    myPeerRef?.current?.close();
   };
 
   useEffect(() => {
@@ -122,51 +158,16 @@ const CallUI = () => {
     };
   }, []);
 
-  useEffect(() => {
-    (async () => {
-      if (!peerConnection) return;
-
-      socket.on("user-joined", async (data: any) => {
-        const offerDescription = data.peerData;
-
-        await peerConnection.setRemoteDescription(
-          new RTCSessionDescription(offerDescription)
-        );
-
-        const answerDescription = await peerConnection?.createAnswer();
-        await peerConnection?.setLocalDescription(answerDescription);
-
-        const answer = {
-          type: answerDescription.type,
-          sdp: answerDescription.sdp,
-        };
-
-        peerConnection.addIceCandidate(new RTCIceCandidate(data.candidate));
-
-        peerConnection.onicecandidate = (event: any) => {
-          socket.emit("exchange-peer", {
-            roomId,
-            peerData: answer,
-            candidate: event?.candidate,
-          });
-        };
-      });
-
-      socket.on("peer-data", async (data: any) => {
-        const offerDescription = data?.peerData;
-        await peerConnection?.setRemoteDescription(
-          new RTCSessionDescription(offerDescription)
-        );
-        peerConnection?.addIceCandidate(new RTCIceCandidate(data?.candidate));
-      });
-    })();
-  }, [peerConnection, socket, roomId]);
+  console.log({ allPeople });
 
   return (
     <section className="w-full  relative text-white  ">
       <ChatUser active={userActiveDrawer} roomId={roomId} />
       <div className="w-full  flex">
         <div
+          style={{
+            height: `${window.innerHeight - navbarHight}px`,
+          }}
           className={` ${
             drawerActive ? "w-[calc(100vw-500px)]" : "w-full"
           }    border-r relative transition-all ease-in-out duration-300 h-full bg-gray-900 border-white  `}
@@ -180,25 +181,23 @@ const CallUI = () => {
           <video
             ref={myVideoRef}
             style={{
-              height: remoteVideo?.current
-                ? "10rem"
-                : `${window.innerHeight - navbarHight}px`,
-              width: remoteVideo?.current ? "18rem" : `100%`,
+              height: "10rem",
+              width: "18rem",
             }}
-            className={` ${
-              remoteVideo?.current
-                ? " absolute bottom-5 right-5 border-4 rounded-xl  bg-black "
-                : "  w-full"
-            }  transition-all ease-in-out object-cover duration-300 `}
+            className=" absolute bottom-5 right-5 border-4 rounded-xl  bg-black transition-all ease-in-out object-cover duration-300 "
             autoPlay={true}
           />
-          <video
+          {allPeople?.current?.map((people, index) => (
+            <Video peer={people?.peer} key={index} />
+          ))}
+
+          {/* <video
             ref={remoteVideo}
             className={` ${
               remoteVideo?.current ? "h-[90vh]  w-full" : "block"
             }  transition-all ease-in-out object-cover duration-300 `}
             autoPlay={true}
-          />
+          /> */}
         </div>
 
         <div
@@ -268,3 +267,24 @@ const CallUI = () => {
 };
 
 export default CallUI;
+
+const Video = (props: any) => {
+  const ref = useRef<any>();
+
+  useEffect(() => {
+    if (!ref.current) return;
+    console.log("video");
+    props?.peer.on("stream", (stream: any) => {
+      console.log({ stream });
+      ref.current.srcObject = stream;
+    });
+  }, [props?.peer, ref.current]);
+
+  return (
+    <video
+      ref={ref}
+      className={` transition-all ease-in-out object-cover duration-300 h-[10rem] w-[10rem] `}
+      autoPlay={true}
+    />
+  );
+};

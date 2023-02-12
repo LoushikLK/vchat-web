@@ -24,23 +24,10 @@ type APP_CONTEXT = {
   setNavbarHeight: (arg: number) => void;
 };
 
-const servers = {
-  iceServers: [
-    {
-      urls: [
-        "stun:stun.l.google.com:19302",
-        // "stun:stun1.l.google.com:19302",
-        // "stun:stun2.l.google.com:19302",
-        // "stun:stun3.l.google.com:19302",
-        // "stun:stun4.l.google.com:19302",
-      ],
-    },
-  ],
-  iceCandidatePoolSize: 10,
-};
 
-const socketServer = `ws://192.168.29.82:8000/`;
-// const socketServer = `wss://vchat-server.onrender.com/`;
+
+// const socketServer = `ws://192.168.29.82:8000/`;
+const socketServer = `wss://vchat-server.onrender.com/`;
 
 const AppContext = createContext<APP_CONTEXT>(contextDefaultValues);
 type Props = {
@@ -64,15 +51,6 @@ export const AppContextProvider = ({ children }: Props) => {
     });
   }, [user?._id]);
 
-  useEffect(() => {
-    (() => {
-      peerConnection.current = new RTCPeerConnection(servers);
-    })();
-
-    return () => {
-      peerConnection?.current?.close();
-    };
-  }, []);
 
   useEffect(() => {
     (async () => {
