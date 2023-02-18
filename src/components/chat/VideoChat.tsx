@@ -9,7 +9,7 @@ const VideoChat = ({ roomId }: { roomId?: string }) => {
   const { navbarHight, socket, user } = useAppState();
   const [refetch, setRefetch] = useState(false);
 
-  const [pageNo, setPageNo] = useState(1);
+  const [pageNo] = useState(1);
 
   const [typeMessage, setTypeMessage] = useState("");
 
@@ -17,6 +17,8 @@ const VideoChat = ({ roomId }: { roomId?: string }) => {
   let typeBarRef = useRef<any>(null);
 
   const [messages, setMessages] = useState<any[]>([]);
+
+  const { mutate } = useFetch();
 
   useEffect(() => {
     focusRef?.current?.scrollIntoView({ behavior: "smooth" });
@@ -42,9 +44,7 @@ const VideoChat = ({ roomId }: { roomId?: string }) => {
         }
       }
     })();
-  }, [roomId, refetch]);
-
-  const { mutate } = useFetch();
+  }, [roomId, refetch, pageNo, mutate]);
 
   useEffect(() => {
     // if (!socket) return;

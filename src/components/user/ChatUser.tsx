@@ -41,7 +41,7 @@ const ChatUser = ({ roomId, active }: { roomId?: string; active: boolean }) => {
         }
       }
     })();
-  }, [roomId, active, reFetch]);
+  }, [roomId, active, reFetch, mutate]);
 
   const handleReject = async (userId?: string) => {
     try {
@@ -162,6 +162,8 @@ const ChatUser = ({ roomId, active }: { roomId?: string; active: boolean }) => {
                         </div>
                       </div>
                     );
+                  } else {
+                    return null;
                   }
                 })}
               </div>

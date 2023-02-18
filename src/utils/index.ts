@@ -1,7 +1,7 @@
 export const formatDate = (date: string | Date, time?: "time") => {
   let returnDateString = "";
 
-  let today = new Date();
+  // let today = new Date();
 
   let formatDate = new Intl.DateTimeFormat("en-in").format(new Date(date));
 

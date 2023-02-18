@@ -8,7 +8,6 @@ import {
 import useAppState from "context/useAppState";
 import { useFormik } from "formik";
 import { useFetch } from "hooks";
-import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { changePasswordSchema } from "schema/changePasswordSchema";
 import { formatDate } from "utils";
@@ -24,7 +23,7 @@ const loginValidation = changePasswordSchema.reduce((prev, curr) => {
 }, {} as any);
 
 const ChangePassword = () => {
-  const navigate = useNavigate();
+  // const navigate = useNavigate();
 
   const { user } = useAppState();
 

@@ -85,17 +85,14 @@ const ProtectedLayout = ({ children }: Props) => {
                 Profile
               </MenuButton>
               <MenuList>
-                <MenuItem>
-                  <Button
-                    colorScheme="messenger"
-                    className="!w-full flex justify-start gap-4"
-                    onClick={() => navigation("/profile")}
-                  >
-                    <Avatar size={"xs"} src={user?.photoUrl} />
-                    <p className="text-xs font-medium w-full text-left  text-white">
-                      {user?.displayName}
-                    </p>
-                  </Button>
+                <MenuItem
+                  className="!w-full flex justify-start gap-4 group !px-6 hover:!bg-blue-500 "
+                  onClick={() => navigation("/profile")}
+                >
+                  <Avatar size={"xs"} src={user?.photoUrl} />
+                  <p className="text-xs font-medium w-full text-left text-blue-500 flex items-center group-hover:!text-white">
+                    {user?.displayName}
+                  </p>
                 </MenuItem>
                 <MenuItem>
                   <p className="text-xs px-4 font-medium text-gray-600">
