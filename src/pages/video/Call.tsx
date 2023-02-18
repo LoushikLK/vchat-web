@@ -18,6 +18,8 @@ import Peer from "simple-peer";
 const CallUI = () => {
   const [peers, setPeers] = useState<any[]>([]);
 
+  const allPeerRef = useRef<any[]>([]);
+
   const myVideoRef = useRef<any>(null);
   const myStreamRef = useRef<any>(null);
 
@@ -62,6 +64,62 @@ const CallUI = () => {
           roomId: response?.data?.data?.data?._id,
           userId: user?._id,
         });
+        socket.on("user-joined", (data: any) => {
+          let newPeer = createPeer(localVideoStream, data?.userId);
+          setPeers((prev) => [
+            ...prev.filter((item) => item?.userId === data?.userId),
+            {
+              peer: newPeer,
+              userId: data?.userId,
+            },
+          ]);
+          allPeerRef.current.push({
+            peer: newPeer,
+            userId: data?.userId,
+          });
+        });
+
+        socket.on("incoming-signal", (data: any) => {
+          //create new peer
+          const peer = new Peer({
+            initiator: false,
+            trickle: false,
+            stream: localVideoStream,
+          });
+
+          peer.on("signal", (signal) => {
+            socket.emit("exchange-signal", {
+              userId: data?.userId,
+              signal,
+              byUser: user?._id,
+            });
+          });
+
+          peer.signal(data?.signal);
+
+          setPeers((prev) => [
+            ...prev.filter((item) => item?.userId !== data?.userId),
+            {
+              userId: data?.userId,
+              peer: peer,
+            },
+          ]);
+
+          allPeerRef.current.push({
+            peer: peer,
+            userId: data?.userId,
+          });
+        });
+
+        socket.on("reverse-signal", (data: any) => {
+          //find user and update
+          let user = allPeerRef.current.find(
+            (peer) => peer.userId === data.userId
+          );
+          if (user) {
+            user.peer.signal(data.signal);
+          }
+        });
       } catch (error) {
         if (error instanceof Error) {
           toast.error(error?.message);
@@ -69,73 +127,13 @@ const CallUI = () => {
         }
       }
     })();
-  }, [roomId]);
-
-  useEffect(() => {
-    socket.on("all-users", (data: any) => {
-      console.log("all user", data);
-
-      if (data?.users?.length) {
-        let newArr: any[] = [];
-
-        data?.users?.forEach((item: string) => {
-          if (item !== user?._id) {
-            let newPeer = createPeer(myStreamRef.current, item);
-            newArr.push({
-              userId: item,
-              peer: newPeer,
-            });
-          }
-        });
-
-        setPeers(newArr);
-      }
-    });
-    socket.on("user-joined", (data: any) => {
-      if (!data?.userId) return;
-      //create a new peer
-      const peer = new Peer({
-        initiator: false,
-        trickle: false,
-        stream: myStreamRef.current,
-      });
-      peer.on("signal", (signal) => {
-        socket.emit("other-user-signal", {
-          signal,
-          userId: data?.userId,
-          byUser: user?._id,
-        });
-      });
-      peer.signal(data?.signal);
-
-      setPeers((item: any) => {
-        return [
-          ...item?.filter((item: any) => item?.userId !== data?.userId),
-          {
-            peer,
-            userId: data?.userId,
-          },
-        ];
-      });
-    });
-
-    socket.on("exchange-peer", (data: any) => {
-      console.log({ data });
-      // console.log(allPeople?.current);
-
-      let user = peers.find((item: any) => {
-        return item?.userId === data?.userId;
-      });
-
-      console.log({ user });
-
-      if (!user) return;
-
-      user.peer.signal(data?.signal);
-    });
   }, []);
 
-  console.log({ peers });
+  useEffect(() => {
+    socket.onAny((name: any, data: any) => {
+      console.log(name, data);
+    });
+  }, []);
 
   const createPeer = (stream: any, userId: string) => {
     const peer = new Peer({
@@ -145,7 +143,7 @@ const CallUI = () => {
     });
 
     peer.on("signal", (signal) => {
-      socket.emit("new-user-joined", {
+      socket.emit("send-signal-to-user", {
         userId: userId,
         signal,
         byUser: user?._id,
@@ -155,21 +153,20 @@ const CallUI = () => {
     return peer;
   };
 
-  // const handleWindowUnload = (event: any) => {
-  //   event.preventDefault();
-  //   // myPeerRef?.current?.close();
-  // };
+  const handleWindowUnload = (event: any) => {
+    console.log("jjj");
+  };
 
-  // useEffect(() => {
-  //   window.addEventListener("beforeunload", handleWindowUnload, {
-  //     capture: true,
-  //   });
-  //   return () => {
-  //     window.removeEventListener("beforeunload", handleWindowUnload, {
-  //       capture: true,
-  //     });
-  //   };
-  // }, []);
+  useEffect(() => {
+    window.addEventListener("beforeunload", handleWindowUnload, {
+      capture: true,
+    });
+    return () => {
+      window.removeEventListener("beforeunload", handleWindowUnload, {
+        capture: true,
+      });
+    };
+  }, []);
 
   return (
     <section className="w-full  relative text-white  ">
