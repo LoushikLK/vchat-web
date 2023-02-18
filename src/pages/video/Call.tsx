@@ -9,7 +9,7 @@ import {
 import { VideoChat } from "components/chat";
 import { ChatUser } from "components/user";
 import useAppState from "context/useAppState";
-import { useFetch, useMounted } from "hooks";
+import { useFetch } from "hooks";
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
@@ -18,11 +18,8 @@ import Peer from "simple-peer";
 const CallUI = () => {
   const [peers, setPeers] = useState<any[]>([]);
 
-  // const allPeople = useRef<any[]>([]);
-
   const myVideoRef = useRef<any>(null);
   const myStreamRef = useRef<any>(null);
-  const myPeerRef = useRef<any>(null);
 
   const [drawerActive, setDrawerActive] = useState(false);
   const [userActiveDrawer, setUserActiveDrawer] = useState(false);
@@ -36,11 +33,11 @@ const CallUI = () => {
 
   const { mutate } = useFetch();
 
-  const isMounted = useMounted();
-
   useEffect(() => {
     (async () => {
       try {
+        if (!roomId) return;
+
         let response = await mutate({
           path: `room/${roomId}`,
           method: "GET",
@@ -72,7 +69,7 @@ const CallUI = () => {
         }
       }
     })();
-  }, [roomId, isMounted]);
+  }, [roomId]);
 
   useEffect(() => {
     socket.on("all-users", (data: any) => {
@@ -88,10 +85,6 @@ const CallUI = () => {
               userId: item,
               peer: newPeer,
             });
-            // allPeople.current.push({
-            //   userId: item,
-            //   peer: newPeer,
-            // });
           }
         });
 
@@ -115,11 +108,6 @@ const CallUI = () => {
       });
       peer.signal(data?.signal);
 
-      // allPeople.current.push({
-      //   userId: data?.userId,
-      //   peer: peer,
-      // });
-
       setPeers((item: any) => {
         return [
           ...item?.filter((item: any) => item?.userId !== data?.userId),
@@ -129,6 +117,21 @@ const CallUI = () => {
           },
         ];
       });
+    });
+
+    socket.on("exchange-peer", (data: any) => {
+      console.log({ data });
+      // console.log(allPeople?.current);
+
+      let user = peers.find((item: any) => {
+        return item?.userId === data?.userId;
+      });
+
+      console.log({ user });
+
+      if (!user) return;
+
+      user.peer.signal(data?.signal);
     });
   }, []);
 
@@ -152,21 +155,21 @@ const CallUI = () => {
     return peer;
   };
 
-  const handleWindowUnload = (event: any) => {
-    event.preventDefault();
-    myPeerRef?.current?.close();
-  };
+  // const handleWindowUnload = (event: any) => {
+  //   event.preventDefault();
+  //   // myPeerRef?.current?.close();
+  // };
 
-  useEffect(() => {
-    window.addEventListener("beforeunload", handleWindowUnload, {
-      capture: true,
-    });
-    return () => {
-      window.removeEventListener("beforeunload", handleWindowUnload, {
-        capture: true,
-      });
-    };
-  }, []);
+  // useEffect(() => {
+  //   window.addEventListener("beforeunload", handleWindowUnload, {
+  //     capture: true,
+  //   });
+  //   return () => {
+  //     window.removeEventListener("beforeunload", handleWindowUnload, {
+  //       capture: true,
+  //     });
+  //   };
+  // }, []);
 
   return (
     <section className="w-full  relative text-white  ">
@@ -195,8 +198,8 @@ const CallUI = () => {
             className=" absolute bottom-5 right-5 border-4 rounded-xl  bg-black transition-all ease-in-out object-cover duration-300 "
             autoPlay={true}
           />
-          {peers?.map((people, index) => (
-            <Video peer={people?.peer} userId={people?.userId} key={index} />
+          {peers?.map((people) => (
+            <Video peer={people?.peer} key={people?.userId} />
           ))}
 
           {/* <video
@@ -279,20 +282,7 @@ export default CallUI;
 const Video = (props: any) => {
   const ref = useRef<any>();
 
-  const { socket } = useAppState();
-
   console.log(props);
-
-  useEffect(() => {
-    socket.on("exchange-peer", (data: any) => {
-      console.log({ data });
-      // console.log(allPeople?.current);
-
-      if (data?.userId === props?.userId) {
-        props?.peer.signal(data?.signal);
-      }
-    });
-  }, []);
 
   useEffect(() => {
     if (!ref.current) return;
@@ -301,7 +291,7 @@ const Video = (props: any) => {
       console.log({ stream });
       ref.current.srcObject = stream;
     });
-  }, [props?.peer]);
+  }, []);
 
   return (
     <video
