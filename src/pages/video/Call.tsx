@@ -38,9 +38,6 @@ const CallUI = () => {
 
   const isMounted = useMounted();
 
-  const remoteStream = useRef<any>(null);
-  const remoteVideo = useRef<any>(null);
-
   useEffect(() => {
     (async () => {
       try {
@@ -63,6 +60,11 @@ const CallUI = () => {
         myStreamRef.current = localVideoStream;
 
         myVideoRef.current.srcObject = localVideoStream;
+
+        socket.emit("new-room-joined", {
+          roomId: response?.data?.data?.data?._id,
+          userId: user?._id,
+        });
       } catch (error) {
         if (error instanceof Error) {
           toast.error(error?.message);
@@ -73,73 +75,96 @@ const CallUI = () => {
   }, [roomId, isMounted]);
 
   useEffect(() => {
-    if (!roomData?._id || !myStreamRef.current) return;
+    socket.on("all-users", (data: any) => {
+      console.log("all user", data);
 
-    const myPeer = new Peer({
-      initiator: true,
-      trickle: false,
-      stream: myStreamRef.current,
+      if (data?.users?.length) {
+        let newArr: any[] = [];
+
+        data?.users?.forEach((item: string) => {
+          if (item !== user?._id) {
+            let newPeer = createPeer(myStreamRef.current, item);
+            newArr.push({
+              userId: item,
+              peer: newPeer,
+            });
+            allPeople.current.push({
+              userId: item,
+              peer: newPeer,
+            });
+          }
+        });
+
+        setPeers(newArr);
+      }
     });
-
-    myPeerRef.current = myPeer;
-
-    myPeer.on("signal", (signal) => {
-      socket.emit("join-new-room", {
-        roomId: roomData?._id,
-        signal,
-        userId: user?._id,
-      });
-    });
-  }, [socket, roomData?._id, myStreamRef.current]);
-
-  useEffect(() => {
     socket.on("user-joined", (data: any) => {
       if (!data?.userId) return;
+      //create a new peer
+      const peer = new Peer({
+        initiator: false,
+        trickle: false,
+        stream: myStreamRef.current,
+      });
+      peer.on("signal", (signal) => {
+        socket.emit("other-user-signal", {
+          signal,
+          userId: data?.userId,
+          byUser: user?._id,
+        });
+      });
+      peer.signal(data?.signal);
+
+      allPeople.current.push({
+        userId: data?.userId,
+        peer: peer,
+      });
+
       setPeers((item: any) => {
         return [
-          ...item?.filter((item: any) => item?.userId != data?.userId),
-          data,
+          ...item?.filter((item: any) => item?.userId !== data?.userId),
+          {
+            peer,
+            userId: data?.userId,
+          },
         ];
       });
     });
 
     socket.on("exchange-peer", (data: any) => {
       console.log({ data });
+      console.log(allPeople?.current);
+
       let user = allPeople?.current?.find((item: any) => {
         return item?.userId === data?.userId;
       });
+
       console.log({ user });
+
+      if (!user) return;
+
       user.peer.signal(data?.signal);
     });
-  }, [socket]);
+  }, []);
 
-  console.log({ allPeople });
+  console.log({ peers });
 
-  useEffect(() => {
-    let allPeers = peers.map((item) => {
-      return addPeer(item?.signal, myStreamRef.current, item?.userId);
-    });
-    allPeople.current = allPeers;
-  }, [peers]);
-
-  const addPeer = (incomingSignal: any, stream: any, userId: string) => {
+  const createPeer = (stream: any, userId: string) => {
     const peer = new Peer({
-      initiator: false,
+      initiator: true,
       trickle: false,
       stream,
     });
 
     peer.on("signal", (signal) => {
-      console.log(userId);
-      socket.emit("reverse-signal", { signal, userId });
+      socket.emit("new-user-joined", {
+        userId: userId,
+        signal,
+        byUser: user?._id,
+      });
     });
 
-    peer.signal(incomingSignal);
-
-    return {
-      peer,
-      userId,
-    };
+    return peer;
   };
 
   const handleWindowUnload = (event: any) => {
@@ -157,8 +182,6 @@ const CallUI = () => {
       });
     };
   }, []);
-
-  console.log({ allPeople });
 
   return (
     <section className="w-full  relative text-white  ">
@@ -187,7 +210,7 @@ const CallUI = () => {
             className=" absolute bottom-5 right-5 border-4 rounded-xl  bg-black transition-all ease-in-out object-cover duration-300 "
             autoPlay={true}
           />
-          {allPeople?.current?.map((people, index) => (
+          {peers?.map((people, index) => (
             <Video peer={people?.peer} key={index} />
           ))}
 
@@ -271,10 +294,12 @@ export default CallUI;
 const Video = (props: any) => {
   const ref = useRef<any>();
 
+  console.log(props);
+
   useEffect(() => {
     if (!ref.current) return;
     console.log("video");
-    props?.peer.on("stream", (stream: any) => {
+    props?.peer?.on("stream", (stream: any) => {
       console.log({ stream });
       ref.current.srcObject = stream;
     });
@@ -283,7 +308,7 @@ const Video = (props: any) => {
   return (
     <video
       ref={ref}
-      className={` transition-all ease-in-out object-cover duration-300 h-[10rem] w-[10rem] `}
+      className={` transition-all ease-in-out object-cover border-2 border-white duration-300 h-[10rem] w-[10rem] `}
       autoPlay={true}
     />
   );

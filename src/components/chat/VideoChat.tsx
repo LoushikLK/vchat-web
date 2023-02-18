@@ -44,7 +44,7 @@ const VideoChat = ({ roomId }: { roomId?: string }) => {
         }
       }
     })();
-  }, [roomId, refetch, pageNo, mutate]);
+  }, [roomId, refetch, pageNo]);
 
   useEffect(() => {
     // if (!socket) return;
