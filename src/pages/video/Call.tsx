@@ -18,7 +18,7 @@ import Peer from "simple-peer";
 const CallUI = () => {
   const [peers, setPeers] = useState<any[]>([]);
 
-  const allPeople = useRef<any[]>([]);
+  // const allPeople = useRef<any[]>([]);
 
   const myVideoRef = useRef<any>(null);
   const myStreamRef = useRef<any>(null);
@@ -88,10 +88,10 @@ const CallUI = () => {
               userId: item,
               peer: newPeer,
             });
-            allPeople.current.push({
-              userId: item,
-              peer: newPeer,
-            });
+            // allPeople.current.push({
+            //   userId: item,
+            //   peer: newPeer,
+            // });
           }
         });
 
@@ -115,10 +115,10 @@ const CallUI = () => {
       });
       peer.signal(data?.signal);
 
-      allPeople.current.push({
-        userId: data?.userId,
-        peer: peer,
-      });
+      // allPeople.current.push({
+      //   userId: data?.userId,
+      //   peer: peer,
+      // });
 
       setPeers((item: any) => {
         return [
@@ -133,9 +133,9 @@ const CallUI = () => {
 
     socket.on("exchange-peer", (data: any) => {
       console.log({ data });
-      console.log(allPeople?.current);
+      // console.log(allPeople?.current);
 
-      let user = allPeople?.current?.find((item: any) => {
+      let user = peers?.find((item: any) => {
         return item?.userId === data?.userId;
       });
 
