@@ -130,21 +130,6 @@ const CallUI = () => {
         ];
       });
     });
-
-    socket.on("exchange-peer", (data: any) => {
-      console.log({ data });
-      // console.log(allPeople?.current);
-
-      let user = peers?.find((item: any) => {
-        return item?.userId === data?.userId;
-      });
-
-      console.log({ user });
-
-      if (!user) return;
-
-      user.peer.signal(data?.signal);
-    });
   }, []);
 
   console.log({ peers });
@@ -211,7 +196,7 @@ const CallUI = () => {
             autoPlay={true}
           />
           {peers?.map((people, index) => (
-            <Video peer={people?.peer} key={index} />
+            <Video peer={people?.peer} userId={people?.userId} key={index} />
           ))}
 
           {/* <video
@@ -294,7 +279,20 @@ export default CallUI;
 const Video = (props: any) => {
   const ref = useRef<any>();
 
+  const { socket } = useAppState();
+
   console.log(props);
+
+  useEffect(() => {
+    socket.on("exchange-peer", (data: any) => {
+      console.log({ data });
+      // console.log(allPeople?.current);
+
+      if (data?.userId === props?.userId) {
+        props?.peer.signal(data?.signal);
+      }
+    });
+  }, []);
 
   useEffect(() => {
     if (!ref.current) return;
@@ -303,7 +301,7 @@ const Video = (props: any) => {
       console.log({ stream });
       ref.current.srcObject = stream;
     });
-  }, [props?.peer, ref.current]);
+  }, [props?.peer]);
 
   return (
     <video
