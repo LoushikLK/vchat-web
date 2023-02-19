@@ -129,12 +129,6 @@ const CallUI = () => {
     })();
   }, []);
 
-  useEffect(() => {
-    socket.onAny((name: any, data: any) => {
-      console.log(name, data);
-    });
-  }, []);
-
   const createPeer = (stream: any, userId: string) => {
     const peer = new Peer({
       initiator: true,
@@ -198,14 +192,6 @@ const CallUI = () => {
           {peers?.map((people) => (
             <Video peer={people?.peer} key={people?.userId} />
           ))}
-
-          {/* <video
-            ref={remoteVideo}
-            className={` ${
-              remoteVideo?.current ? "h-[90vh]  w-full" : "block"
-            }  transition-all ease-in-out object-cover duration-300 `}
-            autoPlay={true}
-          /> */}
         </div>
 
         <div
