@@ -66,13 +66,15 @@ const CallUI = () => {
         });
         socket.on("user-joined", (data: any) => {
           let newPeer = createPeer(localVideoStream, data?.userId);
+
           setPeers((prev) => [
-            ...prev.filter((item) => item?.userId === data?.userId),
+            ...prev.filter((item) => item?.userId !== data?.userId),
             {
-              peer: newPeer,
               userId: data?.userId,
+              peer: newPeer,
             },
           ]);
+
           allPeerRef.current.push({
             peer: newPeer,
             userId: data?.userId,
@@ -112,13 +114,29 @@ const CallUI = () => {
         });
 
         socket.on("reverse-signal", (data: any) => {
-          //find user and update
-          let user = allPeerRef.current.find(
-            (peer) => peer.userId === data.userId
-          );
-          if (user) {
-            user.peer.signal(data.signal);
-          }
+          // setPeers((prev) => {
+          //   return prev.map((item) => {
+          //     if (item?.userId === data?.userId) {
+          //       item.peer.signal(data?.signal);
+          //       return item;
+          //     }
+          //     return item;
+          //   });
+          // });
+
+          allPeerRef.current.forEach((item) => {
+            if (item?.userId === data?.userId) {
+              item.peer.signal(data.signal);
+            }
+          });
+
+          // //find user and update
+          // let user = allPeerRef.current.find(
+          //   (peer) => peer.userId === data.userId
+          // );
+          // if (user) {
+          //   user.peer.signal(data.signal);
+          // }
         });
       } catch (error) {
         if (error instanceof Error) {
@@ -126,6 +144,11 @@ const CallUI = () => {
           navigate("/");
         }
       }
+
+      socket.onAny((name: any, value: any) => {
+        console.log(name, value);
+        console.log(allPeerRef);
+      });
     })();
   }, []);
 
@@ -151,16 +174,18 @@ const CallUI = () => {
     console.log("jjj");
   };
 
-  useEffect(() => {
-    window.addEventListener("beforeunload", handleWindowUnload, {
-      capture: true,
-    });
-    return () => {
-      window.removeEventListener("beforeunload", handleWindowUnload, {
-        capture: true,
-      });
-    };
-  }, []);
+  console.log({ peers });
+
+  // useEffect(() => {
+  //   window.addEventListener("beforeunload", handleWindowUnload, {
+  //     capture: true,
+  //   });
+  //   return () => {
+  //     window.removeEventListener("beforeunload", handleWindowUnload, {
+  //       capture: true,
+  //     });
+  //   };
+  // }, []);
 
   return (
     <section className="w-full  relative text-white  ">
@@ -189,9 +214,11 @@ const CallUI = () => {
             className=" absolute bottom-5 right-5 border-4 rounded-xl  bg-black transition-all ease-in-out object-cover duration-300 "
             autoPlay={true}
           />
-          {peers?.map((people) => (
-            <Video peer={people?.peer} key={people?.userId} />
-          ))}
+          <div className="flex flex-wrap">
+            {peers?.map((people) => (
+              <Video peer={people?.peer} key={people?.userId} />
+            ))}
+          </div>
         </div>
 
         <div
@@ -264,22 +291,17 @@ export default CallUI;
 
 const Video = (props: any) => {
   const ref = useRef<any>();
-
-  console.log(props);
-
   useEffect(() => {
     if (!ref.current) return;
-    console.log("video");
     props?.peer?.on("stream", (stream: any) => {
-      console.log({ stream });
       ref.current.srcObject = stream;
     });
-  }, []);
+  }, [props?.peer]);
 
   return (
     <video
       ref={ref}
-      className={` transition-all ease-in-out object-cover border-2 border-white duration-300 h-[10rem] w-[10rem] `}
+      className={` transition-all ease-in-out object-cover border-2 border-blue-500 duration-300 h-[10rem] w-[10rem] `}
       autoPlay={true}
     />
   );
