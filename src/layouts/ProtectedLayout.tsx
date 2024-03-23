@@ -7,6 +7,7 @@ import {
   MenuItem,
   MenuList,
 } from "@chakra-ui/react";
+import { MainBg } from "assets";
 import useAppState from "context/useAppState";
 import { useFetch } from "hooks";
 import { ReactNode, useEffect, useRef } from "react";
@@ -120,7 +121,17 @@ const ProtectedLayout = ({ children }: Props) => {
           </div>
         </div>
       </header>
-      <main className=" ">{children}</main>
+      <main
+        className=" "
+        style={{
+          backgroundImage: MainBg,
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          backgroundRepeat: "no-repeat",
+        }}
+      >
+        {children}
+      </main>
     </div>
   );
 };
