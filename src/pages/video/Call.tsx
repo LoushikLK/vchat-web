@@ -113,31 +113,31 @@ const CallUI = () => {
           });
         });
 
-        socket.on("reverse-signal", (data: any) => {
-          // setPeers((prev) => {
-          //   return prev.map((item) => {
-          //     if (item?.userId === data?.userId) {
-          //       item.peer.signal(data?.signal);
-          //       return item;
-          //     }
-          //     return item;
-          //   });
-          // });
+        // socket.on("reverse-signal", (data: any) => {
+        //   // setPeers((prev) => {
+        //   //   return prev.map((item) => {
+        //   //     if (item?.userId === data?.userId) {
+        //   //       item.peer.signal(data?.signal);
+        //   //       return item;
+        //   //     }
+        //   //     return item;
+        //   //   });
+        //   // });
 
-          allPeerRef.current.forEach((item) => {
-            if (item?.userId === data?.userId) {
-              item.peer.signal(data.signal);
-            }
-          });
+        //   allPeerRef.current.forEach((item) => {
+        //     if (item?.userId === data?.userId) {
+        //       item.peer.signal(data.signal);
+        //     }
+        //   });
 
-          // //find user and update
-          // let user = allPeerRef.current.find(
-          //   (peer) => peer.userId === data.userId
-          // );
-          // if (user) {
-          //   user.peer.signal(data.signal);
-          // }
-        });
+        //   // //find user and update
+        //   // let user = allPeerRef.current.find(
+        //   //   (peer) => peer.userId === data.userId
+        //   // );
+        //   // if (user) {
+        //   //   user.peer.signal(data.signal);
+        //   // }
+        // });
       } catch (error) {
         if (error instanceof Error) {
           toast.error(error?.message);
@@ -216,7 +216,11 @@ const CallUI = () => {
           />
           <div className="flex flex-wrap">
             {peers?.map((people) => (
-              <Video peer={people?.peer} key={people?.userId} />
+              <Video
+                peer={people?.peer}
+                userId={people?.userId}
+                key={people?.userId}
+              />
             ))}
           </div>
         </div>
@@ -291,12 +295,20 @@ export default CallUI;
 
 const Video = (props: any) => {
   const ref = useRef<any>();
+  const { socket } = useAppState();
   useEffect(() => {
     if (!ref.current) return;
+
+    socket.on("reverse-signal", (data: any) => {
+      if (props?.userId === data?.userId) {
+        props?.peer?.signal(data?.signal);
+      }
+    });
+
     props?.peer?.on("stream", (stream: any) => {
       ref.current.srcObject = stream;
     });
-  }, [props?.peer]);
+  }, [props]);
 
   return (
     <video
