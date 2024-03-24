@@ -94,7 +94,7 @@ const Home = () => {
   }, [socket]);
 
   return (
-    <section className="min-h-[90vh]  flex items-center justify-center ">
+    <section className="min-h-[90vh]  flex items-center justify-center main-container ">
       <div className="flex flex-col gap-4 bg-white rounded-lg p-4 items-center shadow-lg max-w-lg w-full ">
         <h3 className="text-center text-blue-500 text-2xl font-semibold border-b pb-4 w-full mb-4">
           Start A Chat
