@@ -1,3 +1,4 @@
+import { createTheme, ThemeProvider } from "@mui/material/styles";
 import { LOADING } from "assets/animations";
 import useAppState from "context/useAppState";
 import Lottie from "react-lottie";
@@ -15,11 +16,13 @@ const defaultOptions = {
   },
 };
 
+const theme = createTheme();
+
 function App() {
   const { user, appLoading } = useAppState();
 
   return (
-    <>
+    <ThemeProvider theme={theme}>
       {appLoading ? (
         <div className="w-screen h-screen bg-gray-900 flex items-center justify-center  ">
           <Lottie options={defaultOptions} height={400} width={400} />
@@ -34,7 +37,7 @@ function App() {
           />
         </>
       )}
-    </>
+    </ThemeProvider>
   );
 }
 

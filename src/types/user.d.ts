@@ -25,4 +25,5 @@ export default interface UserType {
     LAT: string;
   };
   createdAt?: string;
+  vId?: string;
 }

@@ -6,14 +6,33 @@ import { Route, Routes } from "react-router-dom";
 
 const PrivateRoutes = () => {
   return (
-    <ProtectedLayout>
-      <Routes>
-        <Route path="/call/:roomId" element={<Call />} />
-        <Route path="/" element={<Home />} />
-        <Route path="/profile" element={<Profile />} />
-        <Route path="/change-password" element={<ChangePassword />} />
-      </Routes>
-    </ProtectedLayout>
+    <Routes>
+      <Route path="/call/:roomId" element={<Call />} />
+      <Route
+        path="/"
+        element={
+          <ProtectedLayout>
+            <Home />
+          </ProtectedLayout>
+        }
+      />
+      <Route
+        path="/profile"
+        element={
+          <ProtectedLayout>
+            <Profile />
+          </ProtectedLayout>
+        }
+      />
+      <Route
+        path="/change-password"
+        element={
+          <ProtectedLayout>
+            <ChangePassword />
+          </ProtectedLayout>
+        }
+      />
+    </Routes>
   );
 };
 

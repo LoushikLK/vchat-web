@@ -61,7 +61,7 @@ const Home = () => {
             <Button
               colorScheme="whatsapp"
               size={"xs"}
-              onClick={() => navigation(`/call/${roomId}`)}
+              onClick={() => navigation(`/room/${roomId}`)}
             >
               Join
             </Button>
