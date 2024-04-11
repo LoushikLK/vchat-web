@@ -1,6 +1,6 @@
-import { Button, Input } from "@chakra-ui/react";
+import { Button } from "@chakra-ui/react";
 import { Close } from "@mui/icons-material";
-import { Avatar, IconButton } from "@mui/material";
+import { Avatar, IconButton, TextField } from "@mui/material";
 import useAppState from "context/useAppState";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "react-toastify";
@@ -131,12 +131,13 @@ const Chat = ({
         })}
       </div>
       <div className="absolute right-0 bottom-0 flex items-center gap-4 p-4 w-full bg-theme ">
-        <Input
+        <TextField
           type="text"
           variant="standard"
           value={userMessage}
+          className="!text-white"
+          fullWidth
           placeholder="Type message..."
-          className="border-theme !text-white"
           onKeyDown={(e: any) => {
             if (e?.key === "Enter") {
               setUserMessage(e?.target?.value);
@@ -145,7 +146,10 @@ const Chat = ({
           }}
           onChange={(e) => setUserMessage(e.target.value)}
         />{" "}
-        <Button className="!bg-theme" onClick={handleSendMessage}>
+        <Button
+          className="!bg-blue-500 !px-8 !py-2 !rounded-md"
+          onClick={handleSendMessage}
+        >
           Send
         </Button>
       </div>

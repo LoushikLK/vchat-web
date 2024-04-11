@@ -12,22 +12,15 @@ import {
 import { Button } from "@chakra-ui/react";
 import { Badge } from "@mui/material";
 import useAppState from "context/useAppState";
-import { useSWRFetch } from "hooks";
+import { RoomDataType } from "pages/video/Call";
 import { useEffect, useRef, useState } from "react";
-import UserType from "types/user";
+import { KeyedMutator } from "swr";
+import RoomType from "types/room";
 import AttendanceDetails from "./Attendance";
 import Chat from "./Chat";
 
-type StudentAttendance = {
-  data: {
-    isAbsent: boolean;
-    isOnLeave: boolean;
-    isPresent: boolean;
-    student: UserType;
-    _id: string;
-    timeOfEnter: string;
-    timeOfExit: string;
-  }[];
+type UserAttendanceData = {
+  data: RoomType;
 };
 
 const CallButtons = ({
@@ -39,6 +32,8 @@ const CallButtons = ({
   isVideoMute,
   isAudioMute,
   isScreenSharing,
+  revalidate,
+  data,
 }: {
   classId?: string;
   shareScreen: () => void;
@@ -48,6 +43,8 @@ const CallButtons = ({
   isAudioMute: boolean;
   isVideoMute: boolean;
   isScreenSharing: boolean;
+  revalidate?: KeyedMutator<RoomDataType>;
+  data?: RoomType;
 }) => {
   const [reloadUser, setReloadUser] = useState(false);
   const [drawerActive, setDrawerActive] = useState(false);
@@ -56,9 +53,6 @@ const CallButtons = ({
   const [unreadMessages, setUnreadMessages] = useState(0);
   const [userJoined, setUserJoined] = useState(false);
   let buttonClicked = useRef(true);
-  const { data, mutate } = useSWRFetch<StudentAttendance>(
-    classId && `attendance/${classId}`
-  );
   const { socket, user } = useAppState();
 
   useEffect(() => {
@@ -106,7 +100,7 @@ const CallButtons = ({
   }, []);
 
   useEffect(() => {
-    mutate?.();
+    revalidate?.();
   }, [reloadUser]);
 
   return (
@@ -129,11 +123,11 @@ const CallButtons = ({
         } h-full   transition-all fixed top-0 right-0 z-[999] overflow-hidden ease-in-out duration-300 `}
       >
         <AttendanceDetails
-          allUsers={data?.data}
+          allUsers={data?.joinedUsers}
           closeFn={() => setAttendanceDetails(false)}
         />
       </div>
-      <div className="w-fit z-50 fixed bottom-12 left-1/2 -translate-x-1/2 ">
+      <div className="w-fit z-50 fixed bottom-12 left-1/2 -translate-x-1/2 bg-blue-500 ">
         <div className="flex items-center  gap-2 md:gap-4 p-2 md:p-4 bg-theme/50  rounded-md shadow-lg">
           <Badge color="secondary" variant="dot" invisible={!userJoined}>
             <Button
@@ -173,50 +167,44 @@ const CallButtons = ({
               </span>
             </Button>
           </Badge>
-          {user?.role === "TEACHER" && (
-            <Button
-              onClick={shareScreen}
-              className="!px-2 !py-1 md:!px-4 md:!py-2 "
-            >
-              <span>
-                {isScreenSharing ? (
-                  <PresentToAll className="text-white shadow-lg   " />
-                ) : (
-                  <PresentToAll className="text-gray-900   " />
-                )}
-              </span>
-            </Button>
-          )}
+          <Button
+            onClick={shareScreen}
+            className="!px-2 !py-1 md:!px-4 md:!py-2 "
+          >
+            <span>
+              {isScreenSharing ? (
+                <PresentToAll className="text-white shadow-lg   " />
+              ) : (
+                <PresentToAll className="text-gray-900   " />
+              )}
+            </span>
+          </Button>
 
-          {user?.role === "TEACHER" && (
-            <Button
-              onClick={muteAudio}
-              className="!px-2 !py-1 md:!px-4 md:!py-2 "
-            >
-              <span>
-                {isAudioMute ? (
-                  <MicOff className="text-white shadow-lg   " />
-                ) : (
-                  <MicOutlined className="text-black   " />
-                )}
-              </span>
-            </Button>
-          )}
+          <Button
+            onClick={muteAudio}
+            className="!px-2 !py-1 md:!px-4 md:!py-2 "
+          >
+            <span>
+              {isAudioMute ? (
+                <MicOff className="text-white shadow-lg   " />
+              ) : (
+                <MicOutlined className="text-black   " />
+              )}
+            </span>
+          </Button>
 
-          {user?.role === "TEACHER" && (
-            <Button
-              onClick={muteVideo}
-              className="!px-2 !py-1 md:!px-4 md:!py-2 "
-            >
-              <span>
-                {isVideoMute ? (
-                  <VideocamOff className="text-white shadow-lg   " />
-                ) : (
-                  <VideocamOutlined className="text-black  " />
-                )}
-              </span>
-            </Button>
-          )}
+          <Button
+            onClick={muteVideo}
+            className="!px-2 !py-1 md:!px-4 md:!py-2 "
+          >
+            <span>
+              {isVideoMute ? (
+                <VideocamOff className="text-white shadow-lg   " />
+              ) : (
+                <VideocamOutlined className="text-black  " />
+              )}
+            </span>
+          </Button>
 
           <Button
             className="!bg-red-500  !px-2 !py-1 md:!px-4 md:!py-2"

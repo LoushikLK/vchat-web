@@ -3,17 +3,27 @@ import AgoraRTC, { IMicrophoneAudioTrack } from "agora-rtc-sdk-ng";
 import { AGORA_APP_ID } from "config";
 import useAppState from "context/useAppState";
 import { useFetch } from "hooks";
+import { RoomDataType } from "pages/video/Call";
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "react-toastify";
+import { KeyedMutator } from "swr";
+import RoomType from "types/room";
 import CallButtons from "./CallButtons";
 
-const VideoChat = ({ classId }: { classId?: string }) => {
+const VideoChat = ({
+  classId,
+  data,
+  revalidate,
+}: {
+  classId?: string;
+  revalidate?: KeyedMutator<RoomDataType>;
+  data?: RoomType;
+}) => {
   const { mutate } = useFetch();
   const navigation = useNavigate();
   const { socket, user } = useAppState();
   const [_, setJoinUsers] = useState<any[]>([]);
-
   const [query] = useSearchParams();
 
   const client = useRef<any>();
@@ -408,6 +418,8 @@ const VideoChat = ({ classId }: { classId?: string }) => {
       <div className="local-parent-div w-full min-h-screen text-white"></div>
 
       <CallButtons
+        data={data}
+        revalidate={revalidate}
         classId={classId?.toString()}
         shareScreen={shareScreen}
         endCall={endCall}
