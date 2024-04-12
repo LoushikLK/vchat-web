@@ -1,22 +1,12 @@
 import { BASE_URL } from "config";
-import {
-  createContext,
-  MutableRefObject,
-  useContext,
-  useEffect,
-  useRef,
-  useState,
-} from "react";
-
+import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { connect } from "socket.io-client";
-
 import UserType from "types/user";
 
 const contextDefaultValues: any = {};
 
 type APP_CONTEXT = {
   appLoading: boolean;
-  peerConnection: MutableRefObject<RTCPeerConnection | null>;
   user: UserType | null;
   setUser: (arg: UserType) => void;
   socket?: any;
@@ -35,7 +25,6 @@ type Props = {
 export const AppContextProvider = ({ children }: Props) => {
   const [appLoading, setAppLoading] = useState(true);
   const [user, setUser] = useState<UserType | null>(null);
-  const peerConnection = useRef<RTCPeerConnection | null>(null);
   const [navbarHight, setNavbarHeight] = useState(0);
 
   const socket = useRef<any>(null);
@@ -78,7 +67,6 @@ export const AppContextProvider = ({ children }: Props) => {
     <AppContext.Provider
       value={{
         appLoading,
-        peerConnection,
         user,
         setUser,
         socket: socket?.current,
@@ -92,19 +80,11 @@ export const AppContextProvider = ({ children }: Props) => {
 };
 
 const useAppState = () => {
-  const {
-    appLoading,
-    peerConnection,
-    user,
-    setUser,
-    socket,
-    setNavbarHeight,
-    navbarHight,
-  } = useContext(AppContext);
+  const { appLoading, user, setUser, socket, setNavbarHeight, navbarHight } =
+    useContext(AppContext);
 
   return {
     appLoading,
-    peerConnection: peerConnection?.current,
     user,
     setUser,
     socket,

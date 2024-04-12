@@ -1,4 +1,4 @@
-import { Avatar, AvatarBadge } from "@chakra-ui/react";
+import { Avatar, Badge } from "@mui/material";
 import { EditIcon } from "assets/Icons";
 import useAppState from "context/useAppState";
 import { ChangeEvent, Dispatch, useRef } from "react";
@@ -29,14 +29,12 @@ const Profile = ({
         src={userImage ? URL.createObjectURL(userImage) : user?.photoUrl}
         sx={{ width: "7rem", height: "7rem" }}
       >
-        <AvatarBadge
-          bg="gray"
-          boxSize="2rem"
+        <Badge
           className="!cursor-pointer"
           onClick={() => inputRef?.current?.click()}
         >
           <EditIcon />
-        </AvatarBadge>
+        </Badge>
       </Avatar>
       <input
         type="file"

@@ -1,4 +1,4 @@
-import { HStack, PinInput, PinInputField } from "@chakra-ui/react";
+import { TextField } from "@mui/material";
 import { useFetch } from "hooks";
 import { useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
@@ -56,20 +56,12 @@ const VerifyEmail = () => {
         <p className="tracking-wide text-xs text-center w-full ">
           A 6 digit OTP has been sent to your mail {email || "xxxxx@xx.com"}
         </p>
-        <HStack className="flex w-full items-center justify-center py-4">
-          <PinInput
-            type="alphanumeric"
-            value={pinValue}
-            onChange={(value) => setPinValue(value?.trim())}
-          >
-            <PinInputField />
-            <PinInputField />
-            <PinInputField />
-            <PinInputField />
-            <PinInputField />
-            <PinInputField />
-          </PinInput>
-        </HStack>
+        <TextField
+          type="number"
+          value={pinValue}
+          onChange={(e) => setPinValue(e?.target?.value?.trim())}
+        />
+
         <button
           disabled={!pinValue}
           className="bg-gradient-to-bl  from-blue-400 to-blue-600 ease-in-out duration-200 hover:bg-gradient-to-r hover:scale-105 transition-all text-white w-full px-12 mt-4 py-2 rounded-md"

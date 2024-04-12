@@ -31,10 +31,3 @@
 ::-webkit-scrollbar-track {
   background: transparent;
 }
-
-.main-container {
-  background-image: url("./assets/bg.webp");
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-}

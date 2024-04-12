@@ -1,10 +1,10 @@
 import {
   Button,
   FormControl,
-  FormErrorMessage,
-  Input,
+  FormHelperText,
   Select,
-} from "@chakra-ui/react";
+  TextField,
+} from "@mui/material";
 import useAppState from "context/useAppState";
 import { Field, Form, Formik } from "formik";
 import { useFetch } from "hooks";
@@ -176,20 +176,19 @@ const Address = ({
                               {inputItem.label}
                             </p>
                             <FormControl
-                              isInvalid={Boolean(
-                                props.meta.touched && props.meta.error
-                              )}
+                              error={
+                                props?.meta?.touched && !!props?.meta?.error
+                              }
                             >
                               {inputItem?.type === "select" ? (
                                 <Select
                                   placeholder="Select Gender"
                                   name={inputItem?.name}
-                                  errorBorderColor="red"
                                   onChange={formik?.handleChange}
                                   onBlur={formik?.handleBlur}
                                   value={props?.field?.value}
-                                  isReadOnly={!edit}
-                                  isDisabled={!edit}
+                                  readOnly={!edit}
+                                  disabled={!edit}
                                 >
                                   <option value="MALE">Male</option>
                                   <option value="FEMALE">Female</option>
@@ -197,24 +196,23 @@ const Address = ({
                                   <option value="NONE">Not Specified</option>
                                 </Select>
                               ) : (
-                                <Input
+                                <TextField
                                   variant="filled"
                                   placeholder={inputItem.placeholder}
                                   type={inputItem.type as any}
                                   name={inputItem?.name}
-                                  errorBorderColor="red"
                                   onChange={props?.field?.onChange}
                                   onBlur={props?.field?.onBlur}
                                   value={props?.field?.value}
-                                  isReadOnly={
-                                    inputItem?.name === "email" ? true : !edit
-                                  }
+                                  // readOnly={
+                                  //   inputItem?.name === "email" ? true : !edit
+                                  // }
                                 />
                               )}
 
-                              <FormErrorMessage>
+                              <FormHelperText error>
                                 {props.meta.touched && props.meta.error}
-                              </FormErrorMessage>
+                              </FormHelperText>
                             </FormControl>
                           </div>
                         );

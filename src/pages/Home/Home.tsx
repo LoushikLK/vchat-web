@@ -1,4 +1,4 @@
-import { Button, Input } from "@chakra-ui/react";
+import { Button, TextField } from "@mui/material";
 import { CreateRoom } from "components/home";
 import useAppState from "context/useAppState";
 import { useFetch } from "hooks";
@@ -59,8 +59,8 @@ const Home = () => {
           </h3>
           <div className="flex items-center gap-1">
             <Button
-              colorScheme="whatsapp"
-              size={"xs"}
+              color="primary"
+              size={"small"}
               onClick={() => navigation(`/room/${roomId}`)}
             >
               Join
@@ -100,18 +100,23 @@ const Home = () => {
           Start A Chat
         </h3>
         <div className="flex items-center w-full gap-4">
-          <Input
+          <TextField
             placeholder="Enter join Id"
             value={roomId}
             onChange={(e) => setRoomId(e?.target?.value?.trim())}
+            fullWidth
           />
 
-          <Button colorScheme="messenger" onClick={handleJoinRoom}>
+          <Button
+            color="secondary"
+            className="!min-w-fit"
+            onClick={handleJoinRoom}
+          >
             Join Room
           </Button>
         </div>
         <CreateRoom />
-        <Button colorScheme="messenger" className="!w-full">
+        <Button color="secondary" className="!w-full">
           Join Random
         </Button>
       </div>

@@ -1,4 +1,3 @@
-import { ChakraProvider } from "@chakra-ui/react";
 import { AppContextProvider } from "context/useAppState";
 import * as process from "process";
 import React from "react";
@@ -19,9 +18,7 @@ root.render(
   <React.StrictMode>
     <BrowserRouter>
       <AppContextProvider>
-        <ChakraProvider>
-          <App />
-        </ChakraProvider>
+        <App />
       </AppContextProvider>
     </BrowserRouter>
   </React.StrictMode>

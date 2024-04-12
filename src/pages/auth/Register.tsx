@@ -1,11 +1,9 @@
 import {
   Checkbox,
   FormControl,
-  FormErrorMessage,
-  Input,
-  Stack,
-} from "@chakra-ui/react";
-
+  FormHelperText,
+  TextField,
+} from "@mui/material";
 import { useFormik } from "formik";
 import { useFetch } from "hooks";
 import { Link, useNavigate } from "react-router-dom";
@@ -69,118 +67,90 @@ const Register = () => {
           <p className="text-4xl font-semibold text-blue-600 text-center mb-8">
             Sign Up
           </p>
-          <Stack spacing={5}>
-            <FormControl
-              isInvalid={Boolean(
-                registerFormik?.touched?.name && registerFormik?.errors?.name
-              )}
-            >
-              <Input
-                value={registerFormik?.values?.name}
-                variant="filled"
-                placeholder="Name"
-                name="name"
-                onChange={registerFormik?.handleChange}
-                onBlur={registerFormik?.handleBlur}
-              />
+          <FormControl>
+            <TextField
+              value={registerFormik?.values?.name}
+              variant="filled"
+              placeholder="Name"
+              name="name"
+              onChange={registerFormik?.handleChange}
+              onBlur={registerFormik?.handleBlur}
+            />
 
-              <FormErrorMessage>
-                {registerFormik?.touched?.name &&
-                  (registerFormik?.errors?.name as any)}
-              </FormErrorMessage>
-            </FormControl>
-            <FormControl
-              isInvalid={Boolean(
-                registerFormik?.touched?.email && registerFormik?.errors?.email
-              )}
-            >
-              <Input
-                value={registerFormik?.values?.email}
-                variant="filled"
-                placeholder="Email Address"
-                name="email"
-                onChange={registerFormik?.handleChange}
-                onBlur={registerFormik?.handleBlur}
-              />
+            <FormHelperText>
+              {registerFormik?.touched?.name &&
+                (registerFormik?.errors?.name as any)}
+            </FormHelperText>
+          </FormControl>
+          <FormControl>
+            <TextField
+              value={registerFormik?.values?.email}
+              variant="filled"
+              placeholder="Email Address"
+              name="email"
+              onChange={registerFormik?.handleChange}
+              onBlur={registerFormik?.handleBlur}
+            />
 
-              <FormErrorMessage>
-                {registerFormik?.touched?.email &&
-                  (registerFormik?.errors?.email as any)}
-              </FormErrorMessage>
-            </FormControl>
-            <FormControl
-              isInvalid={Boolean(
-                registerFormik?.touched?.phoneNumber &&
-                  registerFormik?.errors?.phoneNumber
-              )}
-            >
-              <Input
-                value={registerFormik?.values?.phoneNumber}
-                variant="filled"
-                type="phoneNumber"
-                placeholder="PhoneNumber"
-                name="phoneNumber"
-                onChange={registerFormik?.handleChange}
-                onBlur={registerFormik?.handleBlur}
-              />
+            <FormHelperText>
+              {registerFormik?.touched?.email &&
+                (registerFormik?.errors?.email as any)}
+            </FormHelperText>
+          </FormControl>
+          <FormControl>
+            <TextField
+              value={registerFormik?.values?.phoneNumber}
+              variant="filled"
+              type="phoneNumber"
+              placeholder="PhoneNumber"
+              name="phoneNumber"
+              onChange={registerFormik?.handleChange}
+              onBlur={registerFormik?.handleBlur}
+            />
 
-              <FormErrorMessage>
-                {registerFormik?.touched?.phoneNumber &&
-                  (registerFormik?.errors?.phoneNumber as any)}
-              </FormErrorMessage>
-            </FormControl>
-            <FormControl
-              isInvalid={Boolean(
-                registerFormik?.touched?.password &&
-                  registerFormik?.errors?.password
-              )}
-            >
-              <Input
-                value={registerFormik?.values?.password}
-                variant="filled"
-                type="password"
-                placeholder="Password"
-                name="password"
-                onChange={registerFormik?.handleChange}
-                onBlur={registerFormik?.handleBlur}
-              />
+            <FormHelperText>
+              {registerFormik?.touched?.phoneNumber &&
+                (registerFormik?.errors?.phoneNumber as any)}
+            </FormHelperText>
+          </FormControl>
+          <FormControl>
+            <TextField
+              value={registerFormik?.values?.password}
+              variant="filled"
+              type="password"
+              placeholder="Password"
+              name="password"
+              onChange={registerFormik?.handleChange}
+              onBlur={registerFormik?.handleBlur}
+            />
 
-              <FormErrorMessage>
-                {registerFormik?.touched?.password &&
-                  (registerFormik?.errors?.password as any)}
-              </FormErrorMessage>
-            </FormControl>
-            <FormControl
-              isInvalid={Boolean(
-                registerFormik?.touched?.confirmPassword &&
-                  registerFormik?.errors?.confirmPassword
-              )}
-            >
-              <Input
-                value={registerFormik?.values?.confirmPassword}
-                variant="filled"
-                type="password"
-                placeholder="Confirm Password"
-                name="confirmPassword"
-                onChange={registerFormik?.handleChange}
-                onBlur={registerFormik?.handleBlur}
-              />
+            <FormHelperText>
+              {registerFormik?.touched?.password &&
+                (registerFormik?.errors?.password as any)}
+            </FormHelperText>
+          </FormControl>
+          <FormControl>
+            <TextField
+              value={registerFormik?.values?.confirmPassword}
+              variant="filled"
+              type="password"
+              placeholder="Confirm Password"
+              name="confirmPassword"
+              onChange={registerFormik?.handleChange}
+              onBlur={registerFormik?.handleBlur}
+            />
 
-              <FormErrorMessage>
-                {registerFormik?.touched?.confirmPassword &&
-                  (registerFormik?.errors?.confirmPassword as any)}
-              </FormErrorMessage>
-            </FormControl>
-          </Stack>
-
-          <Checkbox defaultChecked className="flex items-center my-4 ">
-            <p className="text-xs font-light ">
-              I agree to the
-              <span className="text-blue-500"> vChat's Privacy Statement </span>
-              and <span className="text-blue-500">Terms of Service</span>.
-            </p>{" "}
-          </Checkbox>
-
+            <FormHelperText>
+              {registerFormik?.touched?.confirmPassword &&
+                (registerFormik?.errors?.confirmPassword as any)}
+            </FormHelperText>
+          </FormControl>
+          <p className="text-xs font-light ">
+            I agree to the
+            <span className="text-blue-500"> vChat's Privacy Statement </span>
+            and <span className="text-blue-500">Terms of Service</span>.
+          </p>{" "}
+          <Checkbox defaultChecked className="flex items-center my-4 " />
           <button
             type="submit"
             className="bg-gradient-to-bl from-blue-400 to-blue-600 ease-in-out duration-200 hover:bg-gradient-to-r hover:scale-105 transition-all text-white w-full mt-4 py-2 rounded-md"

@@ -1,10 +1,4 @@
-import {
-  Avatar,
-  FormControl,
-  FormErrorMessage,
-  Input,
-  Stack,
-} from "@chakra-ui/react";
+import { Avatar, FormControl, FormHelperText, TextField } from "@mui/material";
 import useAppState from "context/useAppState";
 import { useFormik } from "formik";
 import { useFetch } from "hooks";
@@ -104,68 +98,52 @@ const ChangePassword = () => {
                     <p className="text-2xl font-semibold text-blue-600 text-center mb-8">
                       Change Your Password
                     </p>
-                    <Stack spacing={5}>
-                      <FormControl
-                        isInvalid={Boolean(
-                          formik?.touched?.password && formik?.errors?.password
-                        )}
-                      >
-                        <Input
-                          variant="filled"
-                          type="password"
-                          name="password"
-                          placeholder="Password"
-                          autoComplete="password"
-                          onChange={formik?.handleChange}
-                          onBlur={formik?.handleBlur}
-                          value={formik?.values?.password}
-                        />
-                        <FormErrorMessage>
-                          {formik?.touched?.password &&
-                            (formik?.errors?.password as any)}
-                        </FormErrorMessage>
-                      </FormControl>
-                      <FormControl
-                        isInvalid={Boolean(
-                          formik?.touched?.newPassword &&
-                            formik?.errors?.newPassword
-                        )}
-                      >
-                        <Input
-                          variant="filled"
-                          type="password"
-                          name="newPassword"
-                          placeholder="New Password"
-                          onChange={formik?.handleChange}
-                          onBlur={formik?.handleBlur}
-                          value={formik?.values?.newPassword}
-                        />
-                        <FormErrorMessage>
-                          {formik?.touched?.newPassword &&
-                            (formik?.errors?.newPassword as any)}
-                        </FormErrorMessage>
-                      </FormControl>
-                      <FormControl
-                        isInvalid={Boolean(
-                          formik?.touched?.confirmPassword &&
-                            formik?.errors?.confirmPassword
-                        )}
-                      >
-                        <Input
-                          variant="filled"
-                          type="password"
-                          name="confirmPassword"
-                          placeholder="Confirm Password"
-                          onChange={formik?.handleChange}
-                          onBlur={formik?.handleBlur}
-                          value={formik?.values?.confirmPassword}
-                        />
-                        <FormErrorMessage>
-                          {formik?.touched?.confirmPassword &&
-                            (formik?.errors?.confirmPassword as any)}
-                        </FormErrorMessage>
-                      </FormControl>
-                    </Stack>
+                    <FormControl>
+                      <TextField
+                        variant="filled"
+                        type="password"
+                        name="password"
+                        placeholder="Password"
+                        autoComplete="password"
+                        onChange={formik?.handleChange}
+                        onBlur={formik?.handleBlur}
+                        value={formik?.values?.password}
+                      />
+                      <FormHelperText>
+                        {formik?.touched?.password &&
+                          (formik?.errors?.password as any)}
+                      </FormHelperText>
+                    </FormControl>
+                    <FormControl>
+                      <TextField
+                        variant="filled"
+                        type="password"
+                        name="newPassword"
+                        placeholder="New Password"
+                        onChange={formik?.handleChange}
+                        onBlur={formik?.handleBlur}
+                        value={formik?.values?.newPassword}
+                      />
+                      <FormHelperText>
+                        {formik?.touched?.newPassword &&
+                          (formik?.errors?.newPassword as any)}
+                      </FormHelperText>
+                    </FormControl>
+                    <FormControl>
+                      <TextField
+                        variant="filled"
+                        type="password"
+                        name="confirmPassword"
+                        placeholder="Confirm Password"
+                        onChange={formik?.handleChange}
+                        onBlur={formik?.handleBlur}
+                        value={formik?.values?.confirmPassword}
+                      />
+                      <FormHelperText>
+                        {formik?.touched?.confirmPassword &&
+                          (formik?.errors?.confirmPassword as any)}
+                      </FormHelperText>
+                    </FormControl>
 
                     <button
                       type="submit"

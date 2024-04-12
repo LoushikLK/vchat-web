@@ -1,13 +1,5 @@
-import { ChevronDownIcon } from "@chakra-ui/icons";
-import {
-  Avatar,
-  Button,
-  Menu,
-  MenuButton,
-  MenuItem,
-  MenuList,
-} from "@chakra-ui/react";
-import { MainBg } from "assets";
+import { ChevronLeft } from "@mui/icons-material";
+import { Avatar, Button, Menu, MenuItem, MenuList } from "@mui/material";
 import useAppState from "context/useAppState";
 import { useFetch } from "hooks";
 import { ReactNode, useEffect, useRef } from "react";
@@ -75,22 +67,20 @@ const ProtectedLayout = ({ children }: Props) => {
       <header className="w-full bg-blue-700" ref={navBar}>
         <div className="flex h-16 items-center justify-between px-4  ">
           <h1 className="hidden text-xl lg:block text-white ">Welcome Back!</h1>
-          {user?._id}
           <div className="flex items-center gap-6">
-            <Menu>
-              <MenuButton
+            <Menu open>
+              <Button
                 className="!flex !items-center gap-4"
-                as={Button}
-                rightIcon={<ChevronDownIcon />}
+                startIcon={<ChevronLeft />}
               >
                 Profile
-              </MenuButton>
+              </Button>
               <MenuList>
                 <MenuItem
                   className="!w-full flex justify-start gap-4 group !px-6 hover:!bg-blue-500 "
                   onClick={() => navigation("/profile")}
                 >
-                  <Avatar size={"xs"} src={user?.photoUrl} />
+                  <Avatar src={user?.photoUrl} />
                   <p className="text-xs font-medium w-full text-left text-blue-500 flex items-center group-hover:!text-white">
                     {user?.displayName}
                   </p>
@@ -121,17 +111,7 @@ const ProtectedLayout = ({ children }: Props) => {
           </div>
         </div>
       </header>
-      <main
-        className=" "
-        style={{
-          backgroundImage: MainBg,
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-          backgroundRepeat: "no-repeat",
-        }}
-      >
-        {children}
-      </main>
+      <main className=" ">{children}</main>
     </div>
   );
 };

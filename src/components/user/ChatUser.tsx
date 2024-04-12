@@ -1,13 +1,3 @@
-import {
-  Accordion,
-  AccordionButton,
-  AccordionIcon,
-  AccordionItem,
-  AccordionPanel,
-  Avatar,
-  Box,
-  Button,
-} from "@chakra-ui/react";
 import useAppState from "context/useAppState";
 
 import { useFetch } from "hooks";
@@ -122,7 +112,7 @@ const ChatUser = ({ roomId, active }: { roomId?: string; active: boolean }) => {
         }}
         className="w-full relative h-full border-l bg-gray-900 "
       >
-        <Accordion allowToggle defaultIndex={[0]}>
+        {/* <Accordion >
           <AccordionItem>
             <h2>
               <AccordionButton>
@@ -215,7 +205,7 @@ const ChatUser = ({ roomId, active }: { roomId?: string; active: boolean }) => {
               </div>
             </AccordionPanel>
           </AccordionItem>
-        </Accordion>
+        </Accordion> */}
       </div>
     </div>
   );

@@ -1,4 +1,4 @@
-import { FormControl, FormErrorMessage, Input, Stack } from "@chakra-ui/react";
+import { FormControl, FormHelperText, TextField } from "@mui/material";
 import useAppState from "context/useAppState";
 
 import { useFormik } from "formik";
@@ -63,46 +63,35 @@ const Login = () => {
           <p className="text-4xl font-semibold text-blue-600 text-center mb-8">
             Sign In
           </p>
-          <Stack spacing={5}>
-            <FormControl
-              isInvalid={Boolean(
-                loginFormik?.touched?.email && loginFormik?.errors?.email
-              )}
-            >
-              <Input
-                variant="filled"
-                placeholder="Email Address"
-                autoCorrect="email"
-                name="email"
-                errorBorderColor="red"
-                onChange={loginFormik?.handleChange}
-                onBlur={loginFormik?.handleBlur}
-              />
-              <FormErrorMessage>
-                {loginFormik?.touched?.email &&
-                  (loginFormik?.errors?.email as any)}
-              </FormErrorMessage>
-            </FormControl>
-            <FormControl
-              isInvalid={Boolean(
-                loginFormik?.touched?.password && loginFormik?.errors?.password
-              )}
-            >
-              <Input
-                variant="filled"
-                type="password"
-                name="password"
-                placeholder="Password"
-                autoComplete="password"
-                onChange={loginFormik?.handleChange}
-                onBlur={loginFormik?.handleBlur}
-              />
-              <FormErrorMessage>
-                {loginFormik?.touched?.password &&
-                  (loginFormik?.errors?.password as any)}
-              </FormErrorMessage>
-            </FormControl>
-          </Stack>
+          <FormControl>
+            <TextField
+              variant="filled"
+              placeholder="Email Address"
+              autoCorrect="email"
+              name="email"
+              onChange={loginFormik?.handleChange}
+              onBlur={loginFormik?.handleBlur}
+            />
+            <FormHelperText>
+              {loginFormik?.touched?.email &&
+                (loginFormik?.errors?.email as any)}
+            </FormHelperText>
+          </FormControl>
+          <FormControl>
+            <TextField
+              variant="filled"
+              type="password"
+              name="password"
+              placeholder="Password"
+              autoComplete="password"
+              onChange={loginFormik?.handleChange}
+              onBlur={loginFormik?.handleBlur}
+            />
+            <FormHelperText>
+              {loginFormik?.touched?.password &&
+                (loginFormik?.errors?.password as any)}
+            </FormHelperText>
+          </FormControl>
           <Link to={"/forgot-password"}>
             <p className="text-sm text-red-500 font-light mt-4 cursor-pointer">
               Forgot Password?

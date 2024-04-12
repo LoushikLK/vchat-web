@@ -1,18 +1,4 @@
-import {
-  Button,
-  FormControl,
-  FormErrorMessage,
-  Input,
-  Modal,
-  ModalBody,
-  ModalCloseButton,
-  ModalContent,
-  ModalFooter,
-  ModalHeader,
-  ModalOverlay,
-  Select,
-  useDisclosure,
-} from "@chakra-ui/react";
+import { Button } from "@mui/material";
 import useAppState from "context/useAppState";
 import { useFormik } from "formik";
 import { useFetch } from "hooks";
@@ -32,7 +18,6 @@ const validationSchema = Yup.object({
 });
 
 const CreateRoom = () => {
-  const { isOpen, onOpen, onClose } = useDisclosure();
   const { mutate } = useFetch();
   const navigation = useNavigate();
 
@@ -67,12 +52,11 @@ const CreateRoom = () => {
 
   return (
     <>
-      <Button colorScheme="messenger" className="!w-full" onClick={onOpen}>
+      <Button color="secondary" className="!w-full" onClick={() => {}}>
         Create Room
       </Button>
 
-      <Modal isOpen={isOpen} onClose={onClose} isCentered>
-        <ModalOverlay />
+      {/* <Modal isOpen={true} onClose={()=>{}} isCentered>
         <ModalContent>
           <ModalHeader>Create New Call</ModalHeader>
           <ModalCloseButton />
@@ -131,7 +115,7 @@ const CreateRoom = () => {
             </Button>
           </ModalFooter>
         </ModalContent>
-      </Modal>
+      </Modal> */}
     </>
   );
 };

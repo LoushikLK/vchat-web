@@ -1,10 +1,4 @@
-import {
-  HStack,
-  Input,
-  PinInput,
-  PinInputField,
-  Stack,
-} from "@chakra-ui/react";
+import { TextField } from "@mui/material";
 import { useState } from "react";
 import { Link } from "react-router-dom";
 
@@ -19,9 +13,7 @@ const ForgotPassword = () => {
             <p className="text-xl font-semibold text-blue-600 text-left mb-4">
               Forgot Password?
             </p>
-            <Stack spacing={5}>
-              <Input variant="filled" placeholder="Email Address" />
-            </Stack>
+            <TextField fullWidth variant="filled" placeholder="Email Address" />
             <button className="bg-gradient-to-bl from-blue-400 to-blue-600 ease-in-out duration-200 hover:bg-gradient-to-r hover:scale-105 transition-all text-white w-full mt-4 py-2 rounded-md">
               Send OTP
             </button>
@@ -47,16 +39,7 @@ const ForgotPassword = () => {
             <p className="tracking-wide text-xs text-center w-full ">
               A 6 digit OTP has been sent to your mail abscd@xyz.com
             </p>
-            <HStack className="flex w-full items-center justify-center py-4">
-              <PinInput type="alphanumeric">
-                <PinInputField />
-                <PinInputField />
-                <PinInputField />
-                <PinInputField />
-                <PinInputField />
-                <PinInputField />
-              </PinInput>
-            </HStack>
+            T<TextField />
             <span className="py-4 text-sm tracking-wide text-red-600 cursor-pointer ">
               Resend OTP?
             </span>

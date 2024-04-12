@@ -1,4 +1,4 @@
-import { Avatar } from "@chakra-ui/react";
+import { Avatar } from "@mui/material";
 import { OptionIcon } from "assets/Icons";
 import { useState } from "react";
 import { formatDate } from "utils";
@@ -41,13 +41,13 @@ const MessageBox = ({
             {formatDate(message?.createdAt, "time")}
           </small>
         </span>
-        <Avatar size={"sm"} src={message?.sendBy?.photoUrl} loading="lazy" />
+        <Avatar src={message?.sendBy?.photoUrl} />
       </div>
     );
   } else {
     return (
       <div className="w-full flex items-start gap-2 p-4 " key={message?._id}>
-        <Avatar size={"sm"} src={message?.sendBy?.photoUrl} loading="lazy" />
+        <Avatar src={message?.sendBy?.photoUrl} />
         <span className="flex flex-col gap-1  max-w-[70%] justify-end ">
           <small className="tracking-wide bg-blue-500 rounded-r-full rounded-bl-full p-2">
             {message?.message}
