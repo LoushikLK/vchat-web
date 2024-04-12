@@ -7,4 +7,5 @@ export default interface RoomType {
   roomType: "PRIVATE" | "PUBLIC";
   joinedUsers: UserType[];
   waitingUsers: UserType[];
+  admin: UserType;
 }

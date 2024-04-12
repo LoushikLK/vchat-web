@@ -11,8 +11,7 @@ export type RoomDataType = {
 const CallView = () => {
   const { roomId } = useParams();
   const { data, mutate } = useSWRFetch<RoomDataType>(`room/${roomId}`);
-  const [videoScreen, setVideoScreen] = useState(true);
-
+  const [videoScreen, setVideoScreen] = useState(false);
   return (
     <>
       {videoScreen ? (
@@ -29,7 +28,11 @@ const CallView = () => {
           />
         </div>
       ) : (
-        <Waiting data={data?.data} setVideoScreen={setVideoScreen} />
+        <Waiting
+          roomId={roomId}
+          data={data?.data}
+          setVideoScreen={setVideoScreen}
+        />
       )}
     </>
   );

@@ -10,21 +10,18 @@ import RoomType from "types/room";
 const Waiting = ({
   data,
   setVideoScreen,
+  roomId,
 }: {
   data?: RoomType;
   setVideoScreen: Dispatch<SetStateAction<boolean>>;
+  roomId?: string;
 }) => {
   const [audioStream, setAudioStream] = useState<MediaStream | null>(null);
   const [videoStream, setVideoStream] = useState<MediaStream | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
-
   const navigate = useNavigate();
-
   const { user, socket } = useAppState();
   const { mutate } = useFetch();
-
-  const navigation = useNavigate();
-
   const getUserAudio = async () => {
     try {
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
@@ -120,7 +117,13 @@ const Waiting = ({
             <Button
               color="primary"
               size={"small"}
-              onClick={() => navigation(`/room/${roomId}`)}
+              onClick={() =>
+                navigate(
+                  `/call/${roomId}?video=${Boolean(
+                    videoStream?.active
+                  )}&audio=${Boolean(audioStream?.active)}`
+                )
+              }
             >
               Join
             </Button>
@@ -137,6 +140,8 @@ const Waiting = ({
           theme: "dark",
         }
       );
+
+      setVideoScreen(true);
     } catch (error) {
       if (error instanceof Error) {
         toast.error(error?.message);
@@ -151,6 +156,47 @@ const Waiting = ({
       handleViewToastify(data?.roomId);
     });
   }, [socket]);
+
+  const handleJoinRoom = async () => {
+    try {
+      if (data?.admin?._id === user?._id || data?.createBy?._id === user?._id) {
+        navigate(
+          `/call/${roomId}?video=${Boolean(
+            videoStream?.active
+          )}&audio=${Boolean(audioStream?.active)}`
+        );
+        setVideoScreen(true);
+        return;
+      }
+
+      if (data?.roomType === "PUBLIC") {
+        navigate(
+          `/call/${roomId}?video=${Boolean(
+            videoStream?.active
+          )}&audio=${Boolean(audioStream?.active)}`
+        );
+        setVideoScreen(true);
+        return;
+      }
+
+      const res = await mutate({
+        path: "room/join/" + roomId,
+        method: "PUT",
+      });
+      if (res?.status !== 200) throw new Error(res?.data?.error);
+
+      socket.emit("join-waiting-room", {
+        roomId: roomId,
+        userId: user?._id,
+      });
+
+      toast.success(res?.data?.message);
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Something went wrong"
+      );
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-100 flex items-center justify-center">
@@ -209,7 +255,7 @@ const Waiting = ({
             </div>
             <div>
               <p className="text-gray-800 font-semibold">{user?.displayName}</p>
-              <p className="text-gray-500">{data?.title}</p>
+              <p className="text-gray-500">{data?.title || "Private Room"}</p>
             </div>
           </div>
 
@@ -220,13 +266,7 @@ const Waiting = ({
             <button
               className="px-4 py-2 bg-purple-500 w-full text-white rounded hover:bg-purple-600 focus:outline-none focus:bg-purple-600"
               onClick={() => {
-                navigate(
-                  `/call/${data?._id}?video=${Boolean(
-                    videoStream?.active
-                  )}&audio=${Boolean(audioStream?.active)}`
-                );
-
-                setVideoScreen(true);
+                handleJoinRoom();
               }}
             >
               Join

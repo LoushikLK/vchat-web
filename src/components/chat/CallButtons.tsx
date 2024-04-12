@@ -18,10 +18,6 @@ import RoomType from "types/room";
 import AttendanceDetails from "./Attendance";
 import Chat from "./Chat";
 
-type UserAttendanceData = {
-  data: RoomType;
-};
-
 const CallButtons = ({
   classId,
   shareScreen,
@@ -96,11 +92,12 @@ const CallButtons = ({
       ]);
       setReloadUser((prev) => !prev);
     });
-  }, []);
+  }, [attendanceDetails, socket]);
 
   useEffect(() => {
     revalidate?.();
-  }, [reloadUser]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <>
@@ -122,8 +119,9 @@ const CallButtons = ({
         } h-full   transition-all fixed top-0 right-0 z-[999] overflow-hidden ease-in-out duration-300 `}
       >
         <AttendanceDetails
-          allUsers={data?.joinedUsers}
+          data={data}
           closeFn={() => setAttendanceDetails(false)}
+          roomId={classId}
         />
       </div>
       <div className="w-fit z-50 fixed bottom-12 left-1/2 -translate-x-1/2 bg-purple-500 ">

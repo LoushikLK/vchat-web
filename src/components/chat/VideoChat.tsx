@@ -23,7 +23,6 @@ const VideoChat = ({
   const { mutate } = useFetch();
   const navigation = useNavigate();
   const { socket, user } = useAppState();
-  const [_, setJoinUsers] = useState<any[]>([]);
   const [query] = useSearchParams();
 
   const client = useRef<any>();
@@ -36,10 +35,22 @@ const VideoChat = ({
   let checkPublish = useRef(false);
 
   const [isScreenSharing, setIsScreenSharing] = useState(false);
-  const [audioMute, setAudioMute] = useState(false);
-  const [videoMute, setVideoMute] = useState(false);
+  const [userAudioMute, setUserAudioMute] = useState(false);
+  const [userVideoMute, setUserVideoMute] = useState(false);
 
-  const [joinToken, setJoinToken] = useState("");
+  let isQueryAudioMuted = query.get("joinWithoutAudio");
+
+  let isQueryVideoMuted = query.get("joinWithoutVideo");
+
+  useEffect(() => {
+    if (query.get("joinWithoutVideo") === "true") {
+      setUserVideoMute(true);
+    }
+
+    if (query.get("joinWithoutAudio") === "true") {
+      setUserAudioMute(true);
+    }
+  }, [isQueryAudioMuted, isQueryVideoMuted, query]);
 
   const isMounted = useRef(false);
   let count = useRef(0);
@@ -57,10 +68,11 @@ const VideoChat = ({
         }),
       });
       if (response?.data?.error) throw new Error(response?.data?.error);
-      setJoinToken(response?.data?.data?.data?.token);
       return response?.data?.data?.data?.token;
-    } catch (error: any) {
-      new Error(error);
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Something went wrong"
+      );
     }
   };
 
@@ -68,17 +80,7 @@ const VideoChat = ({
     isMounted.current = true;
     (async () => {
       try {
-        if (
-          !user?.vId ||
-          !classId ||
-          !isMounted.current ||
-          !user?.role ||
-          (user?.role === "TEACHER" &&
-            query.get("joinWithoutAudio") === undefined) ||
-          (user?.role === "TEACHER" &&
-            query.get("joinWithoutVideo") === undefined)
-        )
-          return;
+        if (!user?.vId || !classId || !isMounted.current || !user?.role) return;
 
         if (count.current !== 0) return;
         count.current++;
@@ -102,20 +104,7 @@ const VideoChat = ({
 
             if (mediaType === "video") {
               const remoteVideoTrack = user.videoTrack;
-              setJoinUsers((prevUsers) => {
-                return [
-                  ...prevUsers,
-                  {
-                    uid: user.uid,
-                    audio: user.hasAudio,
-                    video: user.hasVideo,
-                    client: false,
-                    videoTrack: remoteVideoTrack,
-                  },
-                ];
-              });
-
-              setVideoMute(false);
+              setUserVideoMute(false);
 
               document?.querySelector(`.localVideo`)?.remove();
               const localPlayerContainer = document.createElement("div");
@@ -128,51 +117,28 @@ const VideoChat = ({
             }
 
             if (mediaType === "audio") {
-              setAudioMute(false);
+              setUserAudioMute(false);
               const remoteAudioTrack = user.audioTrack;
               remoteAudioTrack.play();
-              setJoinUsers((prevUsers) => {
-                return prevUsers.map((User) => {
-                  if (User.uid === user.uid) {
-                    return { ...User, audio: user.hasAudio };
-                  }
-                  return User;
-                });
-              });
             }
+
+            await client.current.setClientRole("host");
           }
         );
         client.current.on(
           "user-unpublished",
           async (user: any, mediaType: any) => {
             if (mediaType === "audio") {
-              setJoinUsers((prevUsers) => {
-                return prevUsers.map((User) => {
-                  if (User.uid === user.uid) {
-                    return { ...User, audio: !User.audio };
-                  }
-                  return User;
-                });
-              });
-              setAudioMute(true);
+              setUserAudioMute(true);
             }
 
             if (mediaType === "video") {
-              setVideoMute(true);
-              setJoinUsers((prevUsers) => {
-                return prevUsers.filter((User) => User.uid !== user.uid);
-              });
+              setUserVideoMute(true);
             }
           }
         );
 
         await client.current.join(AGORA_APP_ID, classId, token, user?.vId);
-
-        await client.current.setClientRole(
-          user?.role === "STUDENT" ? "audience" : "host"
-        );
-
-        if (user?.role === "STUDENT") return;
 
         // media stream create
         const [microphoneTrack, cameraTrack] =
@@ -185,10 +151,10 @@ const VideoChat = ({
 
         await client.current.publish([microphoneTrack, cameraTrack]);
 
-        if (query?.get("joinWithoutAudio") === "true") {
+        if (muteAudio) {
           muteAudio();
         }
-        if (query?.get("joinWithoutVideo") === "true") {
+        if (muteVideo) {
           muteVideo();
         }
 
@@ -223,14 +189,8 @@ const VideoChat = ({
         client.current?.leave();
       }
     };
-  }, [
-    user?.vId,
-    classId,
-    isMounted?.current,
-    user?.role,
-    query.get("joinWithoutAudio"),
-    query.get("joinWithoutVideo"),
-  ]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.vId, classId, user?.role]);
 
   //handle share screen
 
@@ -304,7 +264,7 @@ const VideoChat = ({
     return () => {
       isMounted.current = false;
     };
-  }, [isMounted.current, screenShareCheck.current, shareScreenTrack.current]);
+  }, []);
 
   //handle user leave
   const handleUserLeave = async () => {
@@ -318,85 +278,31 @@ const VideoChat = ({
           _id: user?._id,
         },
       });
-
-      if (user?.role !== "STUDENT") return;
-
-      //update student attendance
-      const attendance = await mutate({
-        path: `attendance/student/create`,
-        method: "POST",
-        body: JSON.stringify({
-          user: user?._id,
-          classId: classId,
-          timeOfExit: new Date().toISOString(),
-        }),
-      });
-
-      if (attendance?.data?.error) throw new Error(attendance?.data?.error);
     } catch (error) {}
-  };
-
-  const handleUserAttendance = async () => {
-    try {
-      //first get all student of the batch
-      const allStudent = await mutate({
-        path: `attendance/${classId}`,
-        method: "GET",
-      });
-
-      if (allStudent?.status === 200) {
-        //then make attendance of all student who are absent
-        let absentFormData = new FormData();
-
-        allStudent?.data?.data?.data
-          ?.filter((item: any) => item?.isPresent === false)
-          ?.forEach((item: any) => {
-            absentFormData?.append("user", item?.student?._id);
-          });
-        absentFormData.append("isAbsent", String(true));
-        absentFormData.append("isPresent", String(false));
-        absentFormData.append("classId", String(classId));
-
-        await mutate({
-          path: "attendance/create",
-          method: "POST",
-          body: absentFormData,
-          isFormData: true,
-        });
-      }
-    } catch (error) {
-      toast.error("Failed creating student attendance.");
-    }
   };
 
   //handle end call
   const endCall = async () => {
     client.current?.leave();
-
-    if (user?.role === "STUDENT") {
-      handleUserLeave();
-      navigation(`/panel/student/dashboard`);
-    } else {
-      await handleUserAttendance();
-      navigation(`/panel/teacher/dashboard`);
-    }
+    handleUserLeave();
+    navigation(`/`);
   };
 
   //handle mute video
   const muteVideo = () => {
-    setVideoMute(Boolean(videoTrack.current?.enabled));
+    setUserVideoMute(Boolean(videoTrack.current?.enabled));
     videoTrack.current?.setEnabled(!videoTrack.current?.enabled);
   };
 
   //handle mute audio
   const muteAudio = () => {
-    setAudioMute(Boolean(audioTrack.current?.enabled));
+    setUserAudioMute(Boolean(audioTrack.current?.enabled));
     audioTrack.current?.setEnabled(!audioTrack.current?.enabled);
   };
 
   return (
     <>
-      {videoMute && (
+      {userVideoMute && (
         <div className="h-screen w-screen fixed top-0 left-0 bg-gray-800 z-10 ">
           <div className="bg-theme z-[9999] flex-col gap-4 rounded-full flex items-center fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 p-8 justify-center">
             <VideocamOff className="text-white !text-7xl " />
@@ -406,7 +312,7 @@ const VideoChat = ({
           </div>
         </div>
       )}
-      {audioMute && (
+      {userAudioMute && (
         <div className="bg-gray-100/10 z-[9999] flex-col gap-4 rounded-xl flex items-center fixed left-10 bottom-10 p-4 justify-center">
           <MicOff className="text-white !text-5xl " />
           <h3 className="font-medium tracking-wide text-xs">
@@ -425,8 +331,8 @@ const VideoChat = ({
         endCall={endCall}
         muteVideo={muteVideo}
         muteAudio={muteAudio}
-        isVideoMute={videoMute}
-        isAudioMute={audioMute}
+        isVideoMute={userVideoMute}
+        isAudioMute={userAudioMute}
         isScreenSharing={isScreenSharing}
       />
     </>
