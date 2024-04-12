@@ -2,6 +2,7 @@ import {
   Button,
   FormControl,
   FormHelperText,
+  MenuItem,
   Select,
   TextField,
 } from "@mui/material";
@@ -179,6 +180,7 @@ const Address = ({
                               error={
                                 props?.meta?.touched && !!props?.meta?.error
                               }
+                              className="w-full"
                             >
                               {inputItem?.type === "select" ? (
                                 <Select
@@ -189,24 +191,28 @@ const Address = ({
                                   value={props?.field?.value}
                                   readOnly={!edit}
                                   disabled={!edit}
+                                  fullWidth
+                                  size="small"
                                 >
-                                  <option value="MALE">Male</option>
-                                  <option value="FEMALE">Female</option>
-                                  <option value="OTHER">Other</option>
-                                  <option value="NONE">Not Specified</option>
+                                  <MenuItem value="MALE">Male</MenuItem>
+                                  <MenuItem value="FEMALE">Female</MenuItem>
+                                  <MenuItem value="OTHER">Other</MenuItem>
+                                  <MenuItem value="NONE">
+                                    Not Specified
+                                  </MenuItem>
                                 </Select>
                               ) : (
                                 <TextField
-                                  variant="filled"
+                                  variant="outlined"
+                                  size="small"
                                   placeholder={inputItem.placeholder}
                                   type={inputItem.type as any}
                                   name={inputItem?.name}
                                   onChange={props?.field?.onChange}
                                   onBlur={props?.field?.onBlur}
                                   value={props?.field?.value}
-                                  // readOnly={
-                                  //   inputItem?.name === "email" ? true : !edit
-                                  // }
+                                  disabled={!edit}
+                                  fullWidth
                                 />
                               )}
 

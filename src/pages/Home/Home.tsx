@@ -1,124 +1,68 @@
-import { Button, TextField } from "@mui/material";
-import { CreateRoom } from "components/home";
-import useAppState from "context/useAppState";
-import { useFetch } from "hooks";
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { toast } from "react-toastify";
+import { Groups, Phone, Videocam } from "@mui/icons-material";
+import { VIDEO_ANIMATION } from "assets/animations";
+import { JoinCall, MeetRandom } from "components/home";
+import { useState } from "react";
+import Lottie from "react-lottie";
+import CreateRoom from "../../components/home/CreateRoom";
+
+const defaultOptions = {
+  loop: true,
+  autoplay: true,
+  animationData: VIDEO_ANIMATION,
+  rendererSettings: {
+    preserveAspectRatio: "xMidYMid slice",
+  },
+};
+
+const viewItem = [
+  <Lottie options={defaultOptions} height={450} width={450} />,
+  <CreateRoom />,
+  <JoinCall />,
+  <MeetRandom />,
+];
 
 const Home = () => {
-  const [roomId, setRoomId] = useState("63e87ce7c7fae66a55d23a6a");
-
-  const { mutate } = useFetch();
-
-  const { socket, user } = useAppState();
-
-  const navigation = useNavigate();
-
-  const handleJoinRoom = async () => {
-    try {
-      if (!roomId) throw new Error("Enter a valid room Id");
-
-      const res = await mutate({
-        path: "room/join/" + roomId,
-        method: "PUT",
-      });
-      if (res?.status !== 200) throw new Error(res?.data?.error);
-      if (!res?.data?.data?.data?.joined) {
-        toast.success(res?.data?.message);
-        socket.emit("join-waiting-room", {
-          roomId,
-          userId: user?._id,
-        });
-        return;
-      }
-      toast.success(res?.data?.message);
-      navigation(`/call/${roomId}`);
-    } catch (error) {
-      if (error instanceof Error) {
-        toast.error(error?.message);
-      }
-    }
-  };
-
-  const handleViewToastify = async (roomId: string) => {
-    try {
-      const res = await mutate({
-        path: "room/" + roomId,
-        method: "GET",
-      });
-      if (res?.status !== 200) throw new Error(res?.data?.error);
-
-      toast.success(
-        <div className="flex items-center gap-4 ">
-          <h3 className="font-medium tracking-wide text-sm">
-            You can now join
-            {" " + res?.data?.data?.data?.title ||
-              res?.data?.data?.data?.createdBy?.displayName}
-            's room
-          </h3>
-          <div className="flex items-center gap-1">
-            <Button
-              color="primary"
-              size={"small"}
-              onClick={() => navigation(`/room/${roomId}`)}
-            >
-              Join
-            </Button>
-          </div>
-        </div>,
-        {
-          position: "bottom-right",
-          autoClose: 10000,
-          hideProgressBar: false,
-          closeOnClick: false,
-          pauseOnHover: true,
-          draggable: true,
-          progress: undefined,
-          theme: "dark",
-        }
-      );
-    } catch (error) {
-      if (error instanceof Error) {
-        toast.error(error?.message);
-      }
-    }
-  };
-
-  useEffect(() => {
-    if (!socket) return;
-    socket.on("room-accepted", (data: any) => {
-      if (!data?.roomId) return;
-      handleViewToastify(data?.roomId);
-    });
-  }, [socket]);
+  const [currentView, setCurrentView] = useState(0);
 
   return (
     <section className="min-h-[90vh]  flex items-center justify-center main-container ">
-      <div className="flex flex-col gap-4 bg-white rounded-lg p-4 items-center shadow-lg max-w-lg w-full ">
-        <h3 className="text-center text-blue-500 text-2xl font-semibold border-b pb-4 w-full mb-4">
-          Start A Chat
-        </h3>
-        <div className="flex items-center w-full gap-4">
-          <TextField
-            placeholder="Enter join Id"
-            value={roomId}
-            onChange={(e) => setRoomId(e?.target?.value?.trim())}
-            fullWidth
-          />
-
-          <Button
-            color="secondary"
-            className="!min-w-fit"
-            onClick={handleJoinRoom}
-          >
-            Join Room
-          </Button>
+      <div className="flex justify-center items-center h-screen">
+        <div className="w-1/2 p-10">
+          <h1 className="text-4xl text-center font-bold mb-8">
+            Call anyone everyone with just a click
+          </h1>
+          <div className="flex flex-col space-y-4">
+            <button
+              className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded flex items-center"
+              onClick={() => setCurrentView(1)}
+            >
+              <Videocam sx={{ fontSize: 20 }} className="mr-2" />
+              Start a New Call
+            </button>
+            <button
+              className="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded flex items-center"
+              onClick={() => setCurrentView(2)}
+            >
+              <Phone sx={{ fontSize: 20 }} className="mr-2" />
+              Join a Call
+            </button>
+            {/* <button
+              className="bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 px-4 rounded flex items-center"
+              onClick={() => setCurrentView(3)}
+            >
+              <Event sx={{ fontSize: 20 }} className="mr-2" />
+              Schedule a Meeting
+            </button> */}
+            <button
+              className="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded flex items-center"
+              onClick={() => setCurrentView(3)}
+            >
+              <Groups sx={{ fontSize: 20 }} className="mr-2" />
+              Meet People
+            </button>
+          </div>
         </div>
-        <CreateRoom />
-        <Button color="secondary" className="!w-full">
-          Join Random
-        </Button>
+        <div className="w-1/2">{viewItem[currentView]}</div>
       </div>
     </section>
   );

@@ -1,9 +1,8 @@
-import { ChevronLeft } from "@mui/icons-material";
-import { Avatar, Button, Menu, MenuItem, MenuList } from "@mui/material";
+import { Avatar, Button, Menu, MenuItem } from "@mui/material";
 import useAppState from "context/useAppState";
 import { useFetch } from "hooks";
-import { ReactNode, useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { ReactNode, useEffect, useRef, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 
 type Props = {
@@ -11,6 +10,15 @@ type Props = {
 };
 
 const ProtectedLayout = ({ children }: Props) => {
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const open = Boolean(anchorEl);
+  const handleClick = (event: React.MouseEvent<HTMLElement>) => {
+    setAnchorEl(event.currentTarget);
+  };
+  const handleClose = () => {
+    setAnchorEl(null);
+  };
+
   const navigation = useNavigate();
 
   const { user, setNavbarHeight } = useAppState();
@@ -63,25 +71,45 @@ const ProtectedLayout = ({ children }: Props) => {
   };
 
   return (
-    <div className="bg-gray-900 min-h-screen">
-      <header className="w-full bg-blue-700" ref={navBar}>
+    <div className="bg-gray-100 min-h-screen">
+      <header className="w-full bg-purple-700" ref={navBar}>
         <div className="flex h-16 items-center justify-between px-4  ">
-          <h1 className="hidden text-xl lg:block text-white ">Welcome Back!</h1>
+          <Link to="/" className="hidden text-xl lg:block text-white ">
+            Welcome Back!
+          </Link>
           <div className="flex items-center gap-6">
-            <Menu open>
+            <div>
               <Button
-                className="!flex !items-center gap-4"
-                startIcon={<ChevronLeft />}
+                id="demo-positioned-button"
+                aria-controls={open ? "demo-positioned-menu" : undefined}
+                aria-haspopup="true"
+                aria-expanded={open ? "true" : undefined}
+                onClick={handleClick}
+                className="!text-white"
               >
                 Profile
               </Button>
-              <MenuList>
+              <Menu
+                id="demo-positioned-menu"
+                aria-labelledby="demo-positioned-button"
+                anchorEl={anchorEl}
+                open={open}
+                onClose={handleClose}
+                anchorOrigin={{
+                  vertical: "top",
+                  horizontal: "left",
+                }}
+                transformOrigin={{
+                  vertical: "top",
+                  horizontal: "left",
+                }}
+              >
                 <MenuItem
-                  className="!w-full flex justify-start gap-4 group !px-6 hover:!bg-blue-500 "
+                  className="!w-full flex justify-start gap-4 group !px-6 hover:!bg-purple-500 "
                   onClick={() => navigation("/profile")}
                 >
                   <Avatar src={user?.photoUrl} />
-                  <p className="text-xs font-medium w-full text-left text-blue-500 flex items-center group-hover:!text-white">
+                  <p className="text-xs font-medium w-full text-left text-purple-500 flex items-center group-hover:!text-white">
                     {user?.displayName}
                   </p>
                 </MenuItem>
@@ -106,8 +134,8 @@ const ProtectedLayout = ({ children }: Props) => {
                     Logout
                   </p>
                 </MenuItem>
-              </MenuList>
-            </Menu>
+              </Menu>
+            </div>
           </div>
         </div>
       </header>

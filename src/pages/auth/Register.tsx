@@ -6,6 +6,7 @@ import {
 } from "@mui/material";
 import { useFormik } from "formik";
 import { useFetch } from "hooks";
+import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { registerSchema } from "schema/registrationSchema";
@@ -22,6 +23,7 @@ const registerValidation = registerSchema.reduce((prev, curr) => {
 
 const Register = () => {
   const navigate = useNavigate();
+  const [isAgree, setIsAgree] = useState(true);
 
   //changing when user on register page to register component
 
@@ -32,6 +34,11 @@ const Register = () => {
     validationSchema: Yup.object(registerValidation),
     onSubmit: async (values) => {
       try {
+        if (!isAgree) {
+          toast.error("Please agree with our terms and conditions");
+          return;
+        }
+
         const formData = new FormData();
         formData?.append("displayName", values?.name);
         formData?.append("email", values?.email);
@@ -64,110 +71,128 @@ const Register = () => {
     <div className="w-1/2 h-full flex justify-center items-center">
       <form onSubmit={registerFormik?.handleSubmit}>
         <div className="w-[22rem] mt-4">
-          <p className="text-4xl font-semibold text-blue-600 text-center mb-8">
+          <p className="text-4xl font-semibold text-purple-600 text-center mb-8">
             Sign Up
           </p>
-          <FormControl>
-            <TextField
-              value={registerFormik?.values?.name}
-              variant="filled"
-              placeholder="Name"
-              name="name"
-              onChange={registerFormik?.handleChange}
-              onBlur={registerFormik?.handleBlur}
-            />
+          <div className="flex flex-col gap-4 w-full">
+            <FormControl className="w-full flex flex-col ">
+              <TextField
+                value={registerFormik?.values?.name}
+                fullWidth
+                variant="outlined"
+                size="small"
+                placeholder="Name"
+                name="name"
+                onChange={registerFormik?.handleChange}
+                onBlur={registerFormik?.handleBlur}
+              />
 
-            <FormHelperText>
-              {registerFormik?.touched?.name &&
-                (registerFormik?.errors?.name as any)}
-            </FormHelperText>
-          </FormControl>
-          <FormControl>
-            <TextField
-              value={registerFormik?.values?.email}
-              variant="filled"
-              placeholder="Email Address"
-              name="email"
-              onChange={registerFormik?.handleChange}
-              onBlur={registerFormik?.handleBlur}
-            />
+              <FormHelperText error>
+                {registerFormik?.touched?.name &&
+                  (registerFormik?.errors?.name as any)}
+              </FormHelperText>
+            </FormControl>
+            <FormControl className="w-full flex flex-col ">
+              <TextField
+                value={registerFormik?.values?.email}
+                fullWidth
+                variant="outlined"
+                size="small"
+                placeholder="Email Address"
+                name="email"
+                onChange={registerFormik?.handleChange}
+                onBlur={registerFormik?.handleBlur}
+              />
 
-            <FormHelperText>
-              {registerFormik?.touched?.email &&
-                (registerFormik?.errors?.email as any)}
-            </FormHelperText>
-          </FormControl>
-          <FormControl>
-            <TextField
-              value={registerFormik?.values?.phoneNumber}
-              variant="filled"
-              type="phoneNumber"
-              placeholder="PhoneNumber"
-              name="phoneNumber"
-              onChange={registerFormik?.handleChange}
-              onBlur={registerFormik?.handleBlur}
-            />
+              <FormHelperText error>
+                {registerFormik?.touched?.email &&
+                  (registerFormik?.errors?.email as any)}
+              </FormHelperText>
+            </FormControl>
+            <FormControl className="w-full flex flex-col ">
+              <TextField
+                value={registerFormik?.values?.phoneNumber}
+                fullWidth
+                variant="outlined"
+                size="small"
+                type="number"
+                placeholder="PhoneNumber"
+                name="phoneNumber"
+                onChange={registerFormik?.handleChange}
+                onBlur={registerFormik?.handleBlur}
+              />
 
-            <FormHelperText>
-              {registerFormik?.touched?.phoneNumber &&
-                (registerFormik?.errors?.phoneNumber as any)}
-            </FormHelperText>
-          </FormControl>
-          <FormControl>
-            <TextField
-              value={registerFormik?.values?.password}
-              variant="filled"
-              type="password"
-              placeholder="Password"
-              name="password"
-              onChange={registerFormik?.handleChange}
-              onBlur={registerFormik?.handleBlur}
-            />
+              <FormHelperText error>
+                {registerFormik?.touched?.phoneNumber &&
+                  (registerFormik?.errors?.phoneNumber as any)}
+              </FormHelperText>
+            </FormControl>
+            <FormControl className="w-full flex flex-col ">
+              <TextField
+                value={registerFormik?.values?.password}
+                fullWidth
+                variant="outlined"
+                size="small"
+                type="password"
+                placeholder="Password"
+                name="password"
+                onChange={registerFormik?.handleChange}
+                onBlur={registerFormik?.handleBlur}
+              />
 
-            <FormHelperText>
-              {registerFormik?.touched?.password &&
-                (registerFormik?.errors?.password as any)}
-            </FormHelperText>
-          </FormControl>
-          <FormControl>
-            <TextField
-              value={registerFormik?.values?.confirmPassword}
-              variant="filled"
-              type="password"
-              placeholder="Confirm Password"
-              name="confirmPassword"
-              onChange={registerFormik?.handleChange}
-              onBlur={registerFormik?.handleBlur}
-            />
+              <FormHelperText error>
+                {registerFormik?.touched?.password &&
+                  (registerFormik?.errors?.password as any)}
+              </FormHelperText>
+            </FormControl>
+            <FormControl className="w-full flex flex-col ">
+              <TextField
+                value={registerFormik?.values?.confirmPassword}
+                fullWidth
+                variant="outlined"
+                size="small"
+                type="password"
+                placeholder="Confirm Password"
+                name="confirmPassword"
+                onChange={registerFormik?.handleChange}
+                onBlur={registerFormik?.handleBlur}
+              />
 
-            <FormHelperText>
-              {registerFormik?.touched?.confirmPassword &&
-                (registerFormik?.errors?.confirmPassword as any)}
-            </FormHelperText>
-          </FormControl>
-          <p className="text-xs font-light ">
-            I agree to the
-            <span className="text-blue-500"> vChat's Privacy Statement </span>
-            and <span className="text-blue-500">Terms of Service</span>.
-          </p>{" "}
-          <Checkbox defaultChecked className="flex items-center my-4 " />
+              <FormHelperText error>
+                {registerFormik?.touched?.confirmPassword &&
+                  (registerFormik?.errors?.confirmPassword as any)}
+              </FormHelperText>
+            </FormControl>
+          </div>
+          <div className="flex gap-2 mt-4">
+            <Checkbox
+              defaultChecked
+              className="flex items-center my-4 "
+              checked={isAgree}
+              onClick={() => setIsAgree(!isAgree)}
+            />
+            <p className="text-xs font-light ">
+              I agree to the
+              <span className="text-purple-500">
+                {" "}
+                vChat's Privacy Statement{" "}
+              </span>
+              and <span className="text-purple-500">Terms of Service</span>.
+            </p>{" "}
+          </div>
           <button
             type="submit"
-            className="bg-gradient-to-bl from-blue-400 to-blue-600 ease-in-out duration-200 hover:bg-gradient-to-r hover:scale-105 transition-all text-white w-full mt-4 py-2 rounded-md"
+            className="bg-gradient-to-bl from-purple-400 to-purple-600 ease-in-out duration-200 hover:bg-gradient-to-r hover:scale-105 transition-all text-white w-full mt-4 py-2 rounded-md"
           >
             Register
           </button>
-          <p className="text-xs font-light mt-8">
-            By signing in, I agree to the
-            <span className="text-blue-500"> Zoom's Privacy Statement </span>
-            and <span className="text-blue-500">Terms of Service</span>.
-          </p>
+
           <div className="flex items-center gap-1 mt-3">
             <span className="  flex items-center text-center text-sm text-gray-600">
               Already have an account?
             </span>
             <Link to={`/login`}>
-              <span className="text-blue-500 hover:underline cursor-pointer font-medium text-sm">
+              <span className="text-purple-500 hover:underline cursor-pointer font-medium text-sm">
                 Login here
               </span>
             </Link>

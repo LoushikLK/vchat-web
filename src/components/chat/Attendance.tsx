@@ -27,7 +27,7 @@ const AttendanceDetails = ({
       </div>
       <div className="flex items-start flex-col gap-4 p-4 overflow-hidden overflow-y-auto min-h-screen h-full ">
         {allUsers?.map((item) => (
-          <div className="flex items-center bg-blue-400/50 gap-4 w-full  rounded-md">
+          <div className="flex items-center bg-purple-400/50 gap-4 w-full  rounded-md">
             <div
               className="flex flex-col items-start w-1/3 p-4 gap-2"
               key={item?._id}
@@ -46,10 +46,10 @@ const AttendanceDetails = ({
               <IconButton className="h-10 w-10  !bg-orange-300">
                 <AdminPanelSettings />
               </IconButton>
-              <IconButton className="h-10 w-10 !bg-blue-300">
+              <IconButton className="h-10 w-10 !bg-purple-300">
                 <VolumeMute />
               </IconButton>
-              <IconButton className="h-10 w-10 !bg-blue-300">
+              <IconButton className="h-10 w-10 !bg-purple-300">
                 <VideocamOff />
               </IconButton>
               <IconButton className="h-10 w-10 !bg-red-400 ">

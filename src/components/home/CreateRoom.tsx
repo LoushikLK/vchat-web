@@ -1,4 +1,11 @@
-import { Button } from "@mui/material";
+import {
+  Button,
+  FormControl,
+  FormHelperText,
+  MenuItem,
+  Select,
+  TextField,
+} from "@mui/material";
 import useAppState from "context/useAppState";
 import { useFormik } from "formik";
 import { useFetch } from "hooks";
@@ -52,70 +59,53 @@ const CreateRoom = () => {
 
   return (
     <>
-      <Button color="secondary" className="!w-full" onClick={() => {}}>
-        Create Room
-      </Button>
+      <div className="w-full p-4 shadow-xl rounded-xl bg-white">
+        <h3 className="font-medium tracking-wide text-4xl p-4 text-center text-blue-800">
+          Create New Call
+        </h3>
 
-      {/* <Modal isOpen={true} onClose={()=>{}} isCentered>
-        <ModalContent>
-          <ModalHeader>Create New Call</ModalHeader>
-          <ModalCloseButton />
-          <ModalBody>
-            <div className="w-full flex flex-col gap-4">
-              <FormControl
-                isInvalid={Boolean(
-                  formik?.touched?.title && formik?.errors?.title
-                )}
+        <div className="w-full p-4">
+          <div className="w-full flex flex-col gap-4">
+            <FormControl>
+              <TextField
+                variant="outlined"
+                placeholder="Title"
+                name="title"
+                onChange={formik?.handleChange}
+                onBlur={formik?.handleBlur}
+              />
+              <FormHelperText>
+                {formik?.touched?.title && (formik?.errors?.title as any)}
+              </FormHelperText>
+            </FormControl>
+            <FormControl>
+              <Select
+                placeholder="Select option"
+                value={formik?.values?.roomType}
+                name="roomType"
+                onChange={formik?.handleChange}
+                onBlur={formik?.handleBlur}
               >
-                <Input
-                  variant="filled"
-                  placeholder="Title"
-                  name="title"
-                  errorBorderColor="red"
-                  onChange={formik?.handleChange}
-                  onBlur={formik?.handleBlur}
-                />
-                <FormErrorMessage>
-                  {formik?.touched?.title && (formik?.errors?.title as any)}
-                </FormErrorMessage>
-              </FormControl>
-              <FormControl
-                isInvalid={Boolean(
-                  formik?.touched?.roomType && formik?.errors?.roomType
-                )}
-              >
-                <Select
-                  placeholder="Select option"
-                  value={formik?.values?.roomType}
-                  name="roomType"
-                  onChange={formik?.handleChange}
-                  onBlur={formik?.handleBlur}
-                >
-                  <option value="PRIVATE">Private</option>
-                  <option value="PUBLIC">Public</option>
-                </Select>
-                <FormErrorMessage>
-                  {formik?.touched?.roomType &&
-                    (formik?.errors?.roomType as any)}
-                </FormErrorMessage>
-              </FormControl>
-            </div>
-          </ModalBody>
+                <MenuItem value="PRIVATE">Private</MenuItem>
+                <MenuItem value="PUBLIC">Public</MenuItem>
+              </Select>
+              <FormHelperText>
+                {formik?.touched?.roomType && (formik?.errors?.roomType as any)}
+              </FormHelperText>
+            </FormControl>
+          </div>
+        </div>
 
-          <ModalFooter>
-            <Button variant="ghost" onClick={onClose}>
-              Cancel
-            </Button>
-            <Button
-              colorScheme="blue"
-              mr={3}
-              onClick={() => formik?.handleSubmit()}
-            >
-              Create
-            </Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal> */}
+        <div className="flex items-center justify-center gap-4 w-full">
+          <Button
+            variant="contained"
+            className="!bg-blue-600 !text-white"
+            onClick={() => formik?.handleSubmit()}
+          >
+            Create
+          </Button>
+        </div>
+      </div>
     </>
   );
 };

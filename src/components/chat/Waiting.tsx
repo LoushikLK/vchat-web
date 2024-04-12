@@ -1,6 +1,7 @@
 import { Mic, MicOff, Videocam, VideocamOff } from "@mui/icons-material";
-import { Avatar, IconButton } from "@mui/material";
+import { Avatar, Button, IconButton } from "@mui/material";
 import useAppState from "context/useAppState";
+import { useFetch } from "hooks";
 import { Dispatch, SetStateAction, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
@@ -19,7 +20,10 @@ const Waiting = ({
 
   const navigate = useNavigate();
 
-  const { user } = useAppState();
+  const { user, socket } = useAppState();
+  const { mutate } = useFetch();
+
+  const navigation = useNavigate();
 
   const getUserAudio = async () => {
     try {
@@ -97,6 +101,57 @@ const Waiting = ({
     }
   };
 
+  const handleViewToastify = async (roomId: string) => {
+    try {
+      const res = await mutate({
+        path: "room/" + roomId,
+        method: "GET",
+      });
+      if (res?.status !== 200) throw new Error(res?.data?.error);
+
+      toast.success(
+        <div className="flex items-center gap-4 ">
+          <h3 className="font-medium tracking-wide text-sm">
+            You can now join
+            {" " + res?.data?.data?.data?.title ||
+              res?.data?.data?.data?.createdBy?.displayName + "s room"}
+          </h3>
+          <div className="flex items-center gap-1">
+            <Button
+              color="primary"
+              size={"small"}
+              onClick={() => navigation(`/room/${roomId}`)}
+            >
+              Join
+            </Button>
+          </div>
+        </div>,
+        {
+          position: "bottom-right",
+          autoClose: 10000,
+          hideProgressBar: false,
+          closeOnClick: false,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+          theme: "dark",
+        }
+      );
+    } catch (error) {
+      if (error instanceof Error) {
+        toast.error(error?.message);
+      }
+    }
+  };
+
+  useEffect(() => {
+    if (!socket) return;
+    socket.on("room-accepted", (data: any) => {
+      if (!data?.roomId) return;
+      handleViewToastify(data?.roomId);
+    });
+  }, [socket]);
+
   return (
     <div className="min-h-screen bg-gray-100 flex items-center justify-center">
       <div className="flex w-full gap-4 items-center justify-center  max-w-5xl ">
@@ -163,7 +218,7 @@ const Waiting = ({
               Waiting for the meeting to start...
             </p>
             <button
-              className="px-4 py-2 bg-blue-500 w-full text-white rounded hover:bg-blue-600 focus:outline-none focus:bg-blue-600"
+              className="px-4 py-2 bg-purple-500 w-full text-white rounded hover:bg-purple-600 focus:outline-none focus:bg-purple-600"
               onClick={() => {
                 navigate(
                   `/call/${data?._id}?video=${Boolean(

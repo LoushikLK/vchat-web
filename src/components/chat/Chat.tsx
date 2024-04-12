@@ -146,7 +146,7 @@ const Chat = ({
           onChange={(e) => setUserMessage(e.target.value)}
         />{" "}
         <Button
-          className="!bg-blue-500 !px-8 !py-2 !rounded-md"
+          className="!bg-purple-500 !px-8 !py-2 !rounded-md"
           onClick={handleSendMessage}
         >
           Send

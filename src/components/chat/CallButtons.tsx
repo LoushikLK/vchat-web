@@ -126,7 +126,7 @@ const CallButtons = ({
           closeFn={() => setAttendanceDetails(false)}
         />
       </div>
-      <div className="w-fit z-50 fixed bottom-12 left-1/2 -translate-x-1/2 bg-blue-500 ">
+      <div className="w-fit z-50 fixed bottom-12 left-1/2 -translate-x-1/2 bg-purple-500 ">
         <div className="flex items-center  gap-2 md:gap-4 p-2 md:p-4 bg-theme/50  rounded-md shadow-lg">
           <Badge color="secondary" variant="dot" invisible={!userJoined}>
             <Button

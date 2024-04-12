@@ -37,7 +37,7 @@ const MessageBox = ({
             {message?.message}
           </small>
 
-          <small className=" ml-4 text-xs  text-blue-700 ">
+          <small className=" ml-4 text-xs  text-purple-700 ">
             {formatDate(message?.createdAt, "time")}
           </small>
         </span>
@@ -49,11 +49,11 @@ const MessageBox = ({
       <div className="w-full flex items-start gap-2 p-4 " key={message?._id}>
         <Avatar src={message?.sendBy?.photoUrl} />
         <span className="flex flex-col gap-1  max-w-[70%] justify-end ">
-          <small className="tracking-wide bg-blue-500 rounded-r-full rounded-bl-full p-2">
+          <small className="tracking-wide bg-purple-500 rounded-r-full rounded-bl-full p-2">
             {message?.message}
           </small>
 
-          <small className=" ml-4 text-xs text-blue-700 text-right ">
+          <small className=" ml-4 text-xs text-purple-700 text-right ">
             {formatDate(message?.createdAt, "time")}
           </small>
         </span>

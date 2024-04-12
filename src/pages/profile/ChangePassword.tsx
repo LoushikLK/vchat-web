@@ -95,12 +95,14 @@ const ChangePassword = () => {
               <div className="w-full h-full flex justify-center items-center">
                 <form onSubmit={formik?.handleSubmit}>
                   <div className="w-[22rem] mt-4">
-                    <p className="text-2xl font-semibold text-blue-600 text-center mb-8">
+                    <p className="text-2xl font-semibold text-purple-600 text-center mb-8">
                       Change Your Password
                     </p>
-                    <FormControl>
+                    <FormControl className="w-full">
                       <TextField
-                        variant="filled"
+                        variant="outlined"
+                        size="small"
+                        fullWidth
                         type="password"
                         name="password"
                         placeholder="Password"
@@ -114,9 +116,11 @@ const ChangePassword = () => {
                           (formik?.errors?.password as any)}
                       </FormHelperText>
                     </FormControl>
-                    <FormControl>
+                    <FormControl className="w-full">
                       <TextField
-                        variant="filled"
+                        variant="outlined"
+                        size="small"
+                        fullWidth
                         type="password"
                         name="newPassword"
                         placeholder="New Password"
@@ -129,9 +133,11 @@ const ChangePassword = () => {
                           (formik?.errors?.newPassword as any)}
                       </FormHelperText>
                     </FormControl>
-                    <FormControl>
+                    <FormControl className="w-full">
                       <TextField
-                        variant="filled"
+                        variant="outlined"
+                        size="small"
+                        fullWidth
                         type="password"
                         name="confirmPassword"
                         placeholder="Confirm Password"
@@ -147,7 +153,7 @@ const ChangePassword = () => {
 
                     <button
                       type="submit"
-                      className="bg-gradient-to-bl from-blue-400 to-blue-600 ease-in-out duration-200 hover:bg-gradient-to-r hover:scale-105 transition-all text-white w-full mt-4 py-2 rounded-md"
+                      className="bg-gradient-to-bl from-purple-400 to-purple-600 ease-in-out duration-200 hover:bg-gradient-to-r hover:scale-105 transition-all text-white w-full mt-4 py-2 rounded-md"
                     >
                       Change Password
                     </button>
