@@ -273,7 +273,9 @@ const Waiting = ({
                 handleJoinRoom();
               }}
             >
-              {data?.roomType !== "PUBLIC" && user?._id !== data?.admin?._id
+              {data?.roomType !== "PUBLIC" &&
+              user?._id !== data?.admin?._id &&
+              user?._id !== data?.createBy?._id
                 ? "Request"
                 : "Join"}
             </button>

@@ -60,36 +60,24 @@ const CallButtons = ({
   }, [attendanceDetails]);
 
   useEffect(() => {
-    socket?.on("message-receive", (data: any) => {
+    socket.emit("new-room-joined", {
+      roomId: classId,
+      userId: user?._id,
+    });
+    socket.on("user-joined", (data: any) => {
+      revalidate?.();
+    });
+
+    socket?.on("message-received", (data: any) => {
       buttonClicked.current = false;
-      setAllChats((prev) => [...prev, data?.data]);
+      setAllChats((prev) => [...prev, data]);
     });
     socket?.on("new-user-joined", async (data: any) => {
       buttonClicked.current = false;
-      setAllChats((prev) => [
-        ...prev,
-        {
-          message: "New user joined the class",
-          type: "MIDDLE",
-          user: data?.data?.user,
-          _id: Date.now() * Math.random(),
-          createdAt: new Date().toISOString(),
-        },
-      ]);
       setReloadUser((prev) => !prev);
       !attendanceDetails && setUserJoined(true);
     });
     socket?.on("user-leaving", async (data: any) => {
-      setAllChats((prev) => [
-        ...prev,
-        {
-          message: "User leaving the class",
-          type: "MIDDLE",
-          user: data?.data?.user,
-          _id: Date.now() * Math.random(),
-          createdAt: new Date().toISOString(),
-        },
-      ]);
       setReloadUser((prev) => !prev);
     });
     socket?.on("user-added-to-waiting", async (data: any) => {
@@ -106,6 +94,8 @@ const CallButtons = ({
     revalidate?.();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [reloadUser]);
+
+  console.log({ allChats });
 
   return (
     <>

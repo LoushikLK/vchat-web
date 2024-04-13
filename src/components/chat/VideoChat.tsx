@@ -56,6 +56,32 @@ const VideoChat = ({
   const isMounted = useRef(false);
   let count = useRef(0);
 
+  useEffect(() => {
+    isMounted.current = true;
+
+    if (!isMounted.current) return;
+    (async () => {
+      try {
+        const response = await mutate({
+          path: `room/${classId}`,
+          method: "GET",
+        });
+
+        if (response?.status !== 200)
+          throw new Error("You are not allowed to join this room!");
+      } catch (error) {
+        toast.error(
+          error instanceof Error ? error.message : "Something went wrong"
+        );
+      }
+    })();
+
+    return () => {
+      isMounted.current = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [classId]);
+
   const tokenCreateFn = async (uid: any, classID: string) => {
     try {
       const response = await mutate({
@@ -287,20 +313,29 @@ const VideoChat = ({
     } catch (error) {}
   };
 
-  useEffect(() => {
-    window.addEventListener("beforeunload", endCall);
-    return () => {
-      window.removeEventListener("beforeunload", endCall);
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  //handle end call
   const endCall = async () => {
     client.current?.leave();
     handleUserLeave();
     navigation(`/`);
   };
+
+  function handleUnloadEvent(e: BeforeUnloadEvent) {
+    try {
+      e.preventDefault();
+      endCall();
+      return `You are leaving this room. Are you sure?`;
+    } catch (error) {}
+  }
+
+  useEffect(() => {
+    window.addEventListener("beforeunload", handleUnloadEvent);
+    return () => {
+      window.removeEventListener("beforeunload", handleUnloadEvent);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  //handle end call
 
   //handle mute video
   const muteVideo = () => {

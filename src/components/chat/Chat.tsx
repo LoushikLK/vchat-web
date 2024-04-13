@@ -3,6 +3,7 @@ import { Avatar, Button, IconButton, TextField } from "@mui/material";
 import useAppState from "context/useAppState";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "react-toastify";
+import UserType from "types/user";
 
 const Chat = ({
   classId,
@@ -11,13 +12,19 @@ const Chat = ({
   closeFn,
 }: {
   classId?: string;
-  allChats?: any[];
+  allChats?: {
+    roomId: string;
+    message: {
+      message: string;
+      createdAt: string;
+      user: UserType;
+      _id: any;
+    };
+  }[];
   setAllChats?: (arg: any) => void;
   closeFn?: () => void;
 }) => {
   const [userMessage, setUserMessage] = useState("");
-
-  console.log({ allChats });
 
   const { socket, user } = useAppState();
 
@@ -44,14 +51,17 @@ const Chat = ({
       setAllChats?.((prev: any) => [
         ...prev,
         {
-          message: userMessage,
-          user: {
-            displayName: user?.displayName,
-            photoUrl: user?.photoUrl,
-            _id: user?._id,
+          roomId: classId,
+          message: {
+            message: userMessage,
+            user: {
+              displayName: user?.displayName,
+              photoUrl: user?.photoUrl,
+              _id: user?._id,
+            },
+            createdAt: new Date().toISOString(),
+            _id: Date.now() * Math.random(),
           },
-          createdAt: new Date().toISOString(),
-          _id: Date.now() * Math.random(),
         },
       ]);
 
@@ -81,7 +91,7 @@ const Chat = ({
       <div className="flex justify-between w-full bg-theme  items-center">
         <h3 className="font-medium tracking-wide text-lg p-4 ">Live Chat</h3>
         <IconButton onClick={closeFn}>
-          <Close />
+          <Close className="!text-purple-400" />
         </IconButton>
       </div>
       <div className="w-full flex flex-col h-[90vh] overflow-hidden overflow-y-auto  pb-20 ">
@@ -90,22 +100,22 @@ const Chat = ({
             return (
               <div
                 className="w-full flex items-start gap-2 p-4 "
-                key={item?._id + `-` + index}
+                key={item?.message?._id + `-` + index}
                 ref={scrollRef}
               >
-                <Avatar src={item?.user?.photoUrl}>
-                  {item?.user?.displayName[0]}
+                <Avatar src={item?.message?.user?.photoUrl} className="!mt-4">
+                  {item?.message?.user?.displayName[0]}
                 </Avatar>
                 <span className="flex flex-col gap-1  max-w-[70%] justify-end ">
-                  <small className="tracking-wide text-white p-2">
-                    {item?.user?.displayName}
+                  <small className="tracking-wide text-white px-2">
+                    {item?.message?.user?.displayName}
                   </small>
-                  <small className="tracking-wide bg-theme rounded-r-full rounded-bl-full p-2">
-                    {item?.message}
+                  <small className="tracking-wide bg-purple-500 rounded-r-full rounded-bl-full p-2">
+                    {item?.message?.message}
                   </small>
 
                   <small className=" ml-4 text-xs text-theme text-right ">
-                    {new Date(item?.createdAt).toDateString()}
+                    {new Date(item?.message?.createdAt).toLocaleTimeString()}
                   </small>
                 </span>
               </div>
@@ -114,7 +124,7 @@ const Chat = ({
             return (
               <div
                 className="w-full flex items-start justify-end  gap-2 p-4 "
-                key={item?._id + `-` + index}
+                key={item?.message?._id + `-` + index}
                 ref={scrollRef}
               >
                 <span className="flex flex-col gap-1 max-w-[70%]  ">
@@ -123,7 +133,7 @@ const Chat = ({
                   </small>
 
                   <small className=" ml-4 text-xs  text-theme ">
-                    {new Date(item?.createdAt).toDateString()}
+                    {new Date(item?.message?.createdAt).toLocaleTimeString()}
                   </small>
                 </span>
               </div>
@@ -136,7 +146,7 @@ const Chat = ({
           type="text"
           variant="standard"
           value={userMessage}
-          className="!text-white"
+          className="!text-white !bg-white !px-4 !py-1 !rounded-md"
           fullWidth
           placeholder="Type message..."
           onKeyDown={(e: any) => {
@@ -148,7 +158,7 @@ const Chat = ({
           onChange={(e) => setUserMessage(e.target.value)}
         />{" "}
         <Button
-          className="!bg-purple-500 !px-8 !py-2 !rounded-md"
+          className="!bg-purple-500 !px-8 !py-2 !rounded-md !text-white"
           onClick={handleSendMessage}
         >
           Send
