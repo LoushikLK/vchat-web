@@ -36,6 +36,7 @@ const VideoChat = ({
 
   const [isScreenSharing, setIsScreenSharing] = useState(false);
   const [userAudioMute, setUserAudioMute] = useState(false);
+
   const [userVideoMute, setUserVideoMute] = useState(false);
 
   let isQueryAudioMuted = query.get("joinWithoutAudio");
@@ -269,6 +270,11 @@ const VideoChat = ({
   //handle user leave
   const handleUserLeave = async () => {
     try {
+      await mutate({
+        path: `room/leave/${classId}`,
+        method: "PUT",
+      });
+
       socket?.emit("user-leaving-class", {
         userId: user?._id,
         roomId: classId,
@@ -281,6 +287,14 @@ const VideoChat = ({
     } catch (error) {}
   };
 
+  useEffect(() => {
+    window.addEventListener("beforeunload", endCall);
+    return () => {
+      window.removeEventListener("beforeunload", endCall);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   //handle end call
   const endCall = async () => {
     client.current?.leave();
@@ -290,13 +304,13 @@ const VideoChat = ({
 
   //handle mute video
   const muteVideo = () => {
-    setUserVideoMute(Boolean(videoTrack.current?.enabled));
+    setUserVideoMute((prev) => !prev);
     videoTrack.current?.setEnabled(!videoTrack.current?.enabled);
   };
 
   //handle mute audio
   const muteAudio = () => {
-    setUserAudioMute(Boolean(audioTrack.current?.enabled));
+    setUserAudioMute((prev) => !prev);
     audioTrack.current?.setEnabled(!audioTrack.current?.enabled);
   };
 

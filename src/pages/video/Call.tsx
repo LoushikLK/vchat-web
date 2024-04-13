@@ -12,6 +12,7 @@ const CallView = () => {
   const { roomId } = useParams();
   const { data, mutate } = useSWRFetch<RoomDataType>(`room/${roomId}`);
   const [videoScreen, setVideoScreen] = useState(false);
+
   return (
     <>
       {videoScreen ? (

@@ -65,7 +65,7 @@ const Chat = ({
 
   useEffect(() => {
     const scrollToBottom = () => {
-      if (allChats?.length || 0 > 0) {
+      if ((allChats?.length || 0) > 0) {
         scrollRef.current &&
           scrollRef.current.scrollIntoView({ behavior: "smooth" });
       }
