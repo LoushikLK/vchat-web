@@ -1,6 +1,8 @@
-import { AdminPanelSettings, Close, Delete } from "@mui/icons-material";
-import { Avatar, Chip, IconButton } from "@mui/material";
+import { Check, Clear, Close } from "@mui/icons-material";
+import { Avatar, Button, Chip, IconButton } from "@mui/material";
 import useAppState from "context/useAppState";
+import { useFetch } from "hooks";
+import { toast } from "react-toastify";
 import RoomType from "types/room";
 
 const JoinRequest = ({
@@ -13,6 +15,38 @@ const JoinRequest = ({
   const { user } = useAppState();
 
   const allUsers = data?.waitingUsers;
+
+  const { mutate } = useFetch();
+
+  const handleAccept = async (userId?: string) => {
+    try {
+      const res = await mutate({
+        path: `room/private/join/${data?._id}/${userId}`,
+        method: "PUT",
+      });
+      if (res?.status !== 200) throw new Error(res?.data?.error);
+      toast.success(res?.data?.message);
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Something went wrong"
+      );
+    }
+  };
+
+  const handleReject = async (userId?: string) => {
+    try {
+      const res = await mutate({
+        path: `room/private/join/${data?._id}/${userId}`,
+        method: "DELETE",
+      });
+      if (res?.status !== 200) throw new Error(res?.data?.error);
+      toast.success(res?.data?.message);
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Something went wrong"
+      );
+    }
+  };
 
   return (
     <div className="w-full relative min-h-screen border-l-gray-700 shadow-lg text-white !bg-gray-800 border-l">
@@ -33,11 +67,8 @@ const JoinRequest = ({
         {allUsers
           ?.filter((inner) => inner._id !== user?._id)
           ?.map((item) => (
-            <div className="flex items-center bg-purple-400/50 gap-4 w-full h-full justify-between  rounded-md">
-              <div
-                className="flex flex-col items-start  p-4 gap-2"
-                key={item?._id}
-              >
+            <div className="flex items-center text-black !bg-white gap-4 w-full h-full justify-between  rounded-md">
+              <div className="flex  items-center  p-4 gap-2" key={item?._id}>
                 <Avatar
                   src={item?.photoUrl}
                   sx={{ width: 32, height: 32 }}
@@ -49,18 +80,22 @@ const JoinRequest = ({
                 <small className=" tracking-wide ">{item?.displayName}</small>
               </div>
               <div className="flex gap-2 h-full pr-2 ">
-                <div className="h-20 w-20 flex items-center justify-center rounded-md shadow-lg !bg-orange-300">
-                  <AdminPanelSettings />
-                </div>
-                {/* <IconButton className="h-10 w-10 !bg-purple-300">
-                <VolumeMute />
-              </IconButton>
-              <IconButton className="h-10 w-10 !bg-purple-300">
-                <VideocamOff />
-              </IconButton> */}
-                <div className="h-20 w-20 flex items-center justify-center rounded-md shadow-lg !bg-red-400 ">
-                  <Delete />
-                </div>
+                <Button
+                  startIcon={<Check />}
+                  color="success"
+                  variant="contained"
+                  onClick={() => handleAccept(item?._id)}
+                >
+                  Accept
+                </Button>
+                <Button
+                  startIcon={<Clear />}
+                  variant="outlined"
+                  color="error"
+                  onClick={() => handleReject(item?._id)}
+                >
+                  Reject
+                </Button>
               </div>
             </div>
           ))}

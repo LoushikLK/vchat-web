@@ -155,10 +155,17 @@ const Waiting = ({
       if (!data?.roomId) return;
       handleViewToastify(data?.roomId);
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [socket]);
 
   const handleJoinRoom = async () => {
     try {
+      const res = await mutate({
+        path: "room/join/" + roomId,
+        method: "PUT",
+      });
+      if (res?.status !== 200) throw new Error(res?.data?.error);
+
       if (data?.admin?._id === user?._id || data?.createBy?._id === user?._id) {
         navigate(
           `/call/${roomId}?video=${Boolean(
@@ -178,12 +185,6 @@ const Waiting = ({
         setVideoScreen(true);
         return;
       }
-
-      const res = await mutate({
-        path: "room/join/" + roomId,
-        method: "PUT",
-      });
-      if (res?.status !== 200) throw new Error(res?.data?.error);
 
       socket.emit("join-waiting-room", {
         roomId: roomId,
@@ -269,7 +270,9 @@ const Waiting = ({
                 handleJoinRoom();
               }}
             >
-              Join
+              {data?.roomType !== "PUBLIC" && user?._id !== data?.admin?._id
+                ? "Request"
+                : "Join"}
             </button>
           </div>
           <div className="text-gray-500">

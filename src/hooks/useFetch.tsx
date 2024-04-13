@@ -57,6 +57,7 @@ const useFetch = (path?: string) => {
 
   useEffect(() => {
     fetchData({ path: path, method: "GET" });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [path, isMounted]);
 
   return {

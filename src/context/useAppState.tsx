@@ -14,7 +14,7 @@ type APP_CONTEXT = {
   setNavbarHeight: (arg: number) => void;
 };
 
-const socketServer = `ws://192.168.29.82:8000/`;
+const socketServer = `ws://localhost:8000/`;
 // const socketServer = `wss://vchat-server.onrender.com/`;
 
 const AppContext = createContext<APP_CONTEXT>(contextDefaultValues);

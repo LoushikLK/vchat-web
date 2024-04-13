@@ -1,6 +1,7 @@
 import { AdminPanelSettings, Close, Delete } from "@mui/icons-material";
 import { Avatar, Button, Chip, IconButton } from "@mui/material";
 import useAppState from "context/useAppState";
+import { useFetch } from "hooks";
 import { useState } from "react";
 import { toast } from "react-toastify";
 import RoomType from "types/room";
@@ -17,6 +18,7 @@ const AttendanceDetails = ({
 }) => {
   const { user } = useAppState();
   const [viewRequest, setViewRequest] = useState(false);
+  const { mutate } = useFetch();
 
   const handleShareLink = async () => {
     try {
@@ -38,6 +40,36 @@ const AttendanceDetails = ({
           ? error.message
           : "Sharing link failed! Please copy the id from the header and send it to your friends"
       );
+    }
+  };
+
+  const removeUser = async (userId: string) => {
+    try {
+      const res = await mutate({
+        path: `room/remove/${roomId}/${userId}`,
+        method: "PUT",
+      });
+      if (res?.status !== 200) throw new Error(res?.data?.error);
+      toast.success(res?.data?.message);
+    } catch (error) {
+      if (error instanceof Error) {
+        toast.error(error.message);
+      }
+    }
+  };
+  const makeUserAdmin = async (userId: string) => {
+    try {
+      const res = await mutate({
+        path: `room/${roomId}`,
+        method: "PUT",
+        body: JSON.stringify({ admin: userId }),
+      });
+      if (res?.status !== 200) throw new Error(res?.data?.error);
+      toast.success("User made admin");
+    } catch (error) {
+      if (error instanceof Error) {
+        toast.error(error.message);
+      }
     }
   };
 
@@ -90,20 +122,31 @@ const AttendanceDetails = ({
                       {item?.displayName}
                     </small>
                   </div>
-                  <div className="flex gap-2 h-full pr-2 ">
-                    <div className="h-20 w-20 flex items-center justify-center rounded-md shadow-lg !bg-orange-300">
-                      <AdminPanelSettings />
+
+                  {data?.admin?._id === user?._id ? (
+                    <div className="flex gap-2 h-full pr-2 ">
+                      <div
+                        className="h-20 w-20 flex items-center cursor-pointer justify-center rounded-md shadow-lg !bg-orange-500 hover:!bg-orange-600"
+                        onClick={() => makeUserAdmin(item?._id)}
+                      >
+                        <AdminPanelSettings />
+                      </div>
+                      {/* <IconButton className="h-10 w-10 !bg-purple-300">
+<VolumeMute />
+</IconButton>
+<IconButton className="h-10 w-10 !bg-purple-300">
+<VideocamOff />
+</IconButton> */}
+                      <div
+                        className="h-20 w-20 flex items-center cursor-pointer justify-center rounded-md shadow-lg !bg-red-500 hover:!bg-red-600 "
+                        onClick={() => removeUser(item?._id)}
+                      >
+                        <Delete />
+                      </div>
                     </div>
-                    {/* <IconButton className="h-10 w-10 !bg-purple-300">
-                <VolumeMute />
-              </IconButton>
-              <IconButton className="h-10 w-10 !bg-purple-300">
-                <VideocamOff />
-              </IconButton> */}
-                    <div className="h-20 w-20 flex items-center justify-center rounded-md shadow-lg !bg-red-400 ">
-                      <Delete />
-                    </div>
-                  </div>
+                  ) : (
+                    <></>
+                  )}
                 </div>
               ))}
           </div>
