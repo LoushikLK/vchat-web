@@ -1,6 +1,6 @@
 import { BASE_URL } from "config";
 import { createContext, useContext, useEffect, useRef, useState } from "react";
-import { connect } from "socket.io-client";
+import { connect, Socket } from "socket.io-client";
 import UserType from "types/user";
 
 const contextDefaultValues: any = {};
@@ -9,7 +9,7 @@ type APP_CONTEXT = {
   appLoading: boolean;
   user: UserType | null;
   setUser: (arg: UserType) => void;
-  socket?: any;
+  socket: Socket<any, any>;
   navbarHight: number;
   setNavbarHeight: (arg: number) => void;
 };
@@ -27,7 +27,7 @@ export const AppContextProvider = ({ children }: Props) => {
   const [user, setUser] = useState<UserType | null>(null);
   const [navbarHight, setNavbarHeight] = useState(0);
 
-  const socket = useRef<any>(null);
+  const socket = useRef<Socket<any, any> | null>(null);
 
   useEffect(() => {
     socket.current = connect(socketServer);
@@ -35,6 +35,10 @@ export const AppContextProvider = ({ children }: Props) => {
     socket?.current?.on("connect", () => {
       if (!user?._id) return;
       socket?.current?.emit("user-connected", user?._id);
+    });
+
+    socket?.current?.onAny((event, ...args) => {
+      console.log(event, args);
     });
   }, [user?._id]);
 
@@ -69,7 +73,7 @@ export const AppContextProvider = ({ children }: Props) => {
         appLoading,
         user,
         setUser,
-        socket: socket?.current,
+        socket: socket?.current as Socket<any, any>,
         setNavbarHeight,
         navbarHight,
       }}

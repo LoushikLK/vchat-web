@@ -1,7 +1,8 @@
 import { VideoChat } from "components/chat";
 import Waiting from "components/chat/Waiting";
+import useAppState from "context/useAppState";
 import { useSWRFetch } from "hooks";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import RoomType from "types/room";
 
@@ -11,7 +12,14 @@ export type RoomDataType = {
 const CallView = () => {
   const { roomId } = useParams();
   const { data, mutate } = useSWRFetch<RoomDataType>(`room/${roomId}`);
+  const { socket } = useAppState();
   const [videoScreen, setVideoScreen] = useState(false);
+
+  useEffect(() => {
+    socket.emit("room-connected", {
+      roomId,
+    });
+  }, [roomId, socket]);
 
   return (
     <>

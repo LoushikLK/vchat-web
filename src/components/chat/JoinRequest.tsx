@@ -2,17 +2,21 @@ import { Check, Clear, Close } from "@mui/icons-material";
 import { Avatar, Button, Chip, IconButton } from "@mui/material";
 import useAppState from "context/useAppState";
 import { useFetch } from "hooks";
+import { RoomDataType } from "pages/video/Call";
 import { toast } from "react-toastify";
+import { KeyedMutator } from "swr";
 import RoomType from "types/room";
 
 const JoinRequest = ({
   closeFn,
   data,
+  revalidate,
 }: {
   closeFn?: () => void;
   data?: RoomType;
+  revalidate?: KeyedMutator<RoomDataType>;
 }) => {
-  const { user } = useAppState();
+  const { user, socket } = useAppState();
 
   const allUsers = data?.waitingUsers;
 
@@ -26,6 +30,11 @@ const JoinRequest = ({
       });
       if (res?.status !== 200) throw new Error(res?.data?.error);
       toast.success(res?.data?.message);
+      socket.emit("user-accepted", {
+        roomId: data?._id,
+        userId,
+      });
+      revalidate?.();
     } catch (error) {
       toast.error(
         error instanceof Error ? error.message : "Something went wrong"
@@ -41,6 +50,13 @@ const JoinRequest = ({
       });
       if (res?.status !== 200) throw new Error(res?.data?.error);
       toast.success(res?.data?.message);
+
+      socket.emit("user-rejected", {
+        roomId: data?._id,
+        userId,
+      });
+
+      revalidate?.();
     } catch (error) {
       toast.error(
         error instanceof Error ? error.message : "Something went wrong"

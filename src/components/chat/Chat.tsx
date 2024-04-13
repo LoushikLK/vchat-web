@@ -17,6 +17,8 @@ const Chat = ({
 }) => {
   const [userMessage, setUserMessage] = useState("");
 
+  console.log({ allChats });
+
   const { socket, user } = useAppState();
 
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -25,7 +27,7 @@ const Chat = ({
     try {
       if (!userMessage?.trim()) return;
 
-      socket.emit("message-to-chat", {
+      socket.emit("message-send", {
         roomId: classId,
         message: {
           message: userMessage,
@@ -84,7 +86,7 @@ const Chat = ({
       </div>
       <div className="w-full flex flex-col h-[90vh] overflow-hidden overflow-y-auto  pb-20 ">
         {allChats?.map((item, index) => {
-          if (item?.user?._id !== user?._id) {
+          if (item?.message?.user?._id !== user?._id) {
             return (
               <div
                 className="w-full flex items-start gap-2 p-4 "
@@ -117,7 +119,7 @@ const Chat = ({
               >
                 <span className="flex flex-col gap-1 max-w-[70%]  ">
                   <small className="tracking-wide bg-gray-200 text-gray-900 rounded-l-full rounded-br-full p-2">
-                    {item?.message}
+                    {item?.message?.message}
                   </small>
 
                   <small className=" ml-4 text-xs  text-theme ">

@@ -57,7 +57,7 @@ const CallButtons = ({
   useEffect(() => {
     if (attendanceDetails) return;
     !buttonClicked?.current && setUserJoined(true);
-  }, [attendanceDetails, reloadUser]);
+  }, [attendanceDetails]);
 
   useEffect(() => {
     socket?.on("message-receive", (data: any) => {
@@ -92,12 +92,20 @@ const CallButtons = ({
       ]);
       setReloadUser((prev) => !prev);
     });
+    socket?.on("user-added-to-waiting", async (data: any) => {
+      revalidate?.();
+      setUserJoined(true);
+    });
+    socket?.on("revalidate-room", async (data: any) => {
+      revalidate?.();
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [attendanceDetails, socket]);
 
   useEffect(() => {
     revalidate?.();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [reloadUser]);
 
   return (
     <>
@@ -122,11 +130,12 @@ const CallButtons = ({
           data={data}
           closeFn={() => setAttendanceDetails(false)}
           roomId={classId}
+          revalidate={revalidate}
         />
       </div>
       <div className="w-fit z-50 fixed bottom-12 left-1/2 -translate-x-1/2 bg-purple-500 ">
         <div className="flex items-center  gap-2 md:gap-4 p-2 md:p-4 bg-theme/50  rounded-md shadow-lg">
-          <Badge color="secondary" variant="dot" invisible={!userJoined}>
+          <Badge color="success" variant="dot" invisible={!userJoined}>
             <Button
               onClick={() => {
                 setAttendanceDetails((prev) => !prev);

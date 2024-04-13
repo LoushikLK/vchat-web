@@ -2,8 +2,10 @@ import { AdminPanelSettings, Close, Delete } from "@mui/icons-material";
 import { Avatar, Button, Chip, IconButton } from "@mui/material";
 import useAppState from "context/useAppState";
 import { useFetch } from "hooks";
+import { RoomDataType } from "pages/video/Call";
 import { useState } from "react";
 import { toast } from "react-toastify";
+import { KeyedMutator } from "swr";
 import RoomType from "types/room";
 import JoinRequest from "./JoinRequest";
 
@@ -11,12 +13,14 @@ const AttendanceDetails = ({
   data,
   closeFn,
   roomId,
+  revalidate,
 }: {
   data?: RoomType;
   closeFn?: () => void;
   roomId?: string;
+  revalidate?: KeyedMutator<RoomDataType>;
 }) => {
-  const { user } = useAppState();
+  const { user, socket } = useAppState();
   const [viewRequest, setViewRequest] = useState(false);
   const { mutate } = useFetch();
 
@@ -51,6 +55,7 @@ const AttendanceDetails = ({
       });
       if (res?.status !== 200) throw new Error(res?.data?.error);
       toast.success(res?.data?.message);
+      revalidate?.();
     } catch (error) {
       if (error instanceof Error) {
         toast.error(error.message);
@@ -66,6 +71,15 @@ const AttendanceDetails = ({
       });
       if (res?.status !== 200) throw new Error(res?.data?.error);
       toast.success("User made admin");
+
+      socket.emit("room-updated", {
+        roomId,
+        data: {
+          admin: userId,
+        },
+      });
+
+      revalidate?.();
     } catch (error) {
       if (error instanceof Error) {
         toast.error(error.message);
@@ -76,7 +90,11 @@ const AttendanceDetails = ({
   return (
     <>
       {viewRequest ? (
-        <JoinRequest closeFn={() => setViewRequest(false)} data={data} />
+        <JoinRequest
+          closeFn={() => setViewRequest(false)}
+          data={data}
+          revalidate={revalidate}
+        />
       ) : (
         <div className="w-full relative min-h-screen border-l-gray-700 shadow-lg text-white !bg-gray-800 border-l">
           <div className="flex justify-between w-full bg-theme  items-center">

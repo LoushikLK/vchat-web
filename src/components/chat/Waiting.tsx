@@ -155,6 +155,9 @@ const Waiting = ({
       if (!data?.roomId) return;
       handleViewToastify(data?.roomId);
     });
+    socket.on("room-rejected", (_: any) => {
+      toast.error("Your request has been rejected");
+    });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [socket]);
 
