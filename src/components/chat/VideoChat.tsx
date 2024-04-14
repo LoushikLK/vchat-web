@@ -1,5 +1,9 @@
-import { MicOff, VideocamOff } from "@mui/icons-material";
-import AgoraRTC, { IMicrophoneAudioTrack } from "agora-rtc-sdk-ng";
+import { VideocamOff } from "@mui/icons-material";
+import AgoraRTC, {
+  IAgoraRTCClient,
+  IAgoraRTCRemoteUser,
+  IMicrophoneAudioTrack,
+} from "agora-rtc-sdk-ng";
 import { AGORA_APP_ID } from "config";
 import useAppState from "context/useAppState";
 import { useFetch } from "hooks";
@@ -10,6 +14,7 @@ import { toast } from "react-toastify";
 import { KeyedMutator } from "swr";
 import RoomType from "types/room";
 import CallButtons from "./CallButtons";
+import ViewUsers from "./ViewUsers";
 
 const VideoChat = ({
   classId,
@@ -25,7 +30,7 @@ const VideoChat = ({
   const { socket, user } = useAppState();
   const [query] = useSearchParams();
 
-  const client = useRef<any>();
+  const client = useRef<IAgoraRTCClient>();
 
   const videoTrack = useRef<any>();
   const audioTrack = useRef<IMicrophoneAudioTrack>();
@@ -36,8 +41,9 @@ const VideoChat = ({
 
   const [isScreenSharing, setIsScreenSharing] = useState(false);
   const [userAudioMute, setUserAudioMute] = useState(false);
-
   const [userVideoMute, setUserVideoMute] = useState(false);
+
+  const [remoteUsers, setRemoteUsers] = useState<IAgoraRTCRemoteUser[]>([]);
 
   let isQueryAudioMuted = query.get("joinWithoutAudio");
 
@@ -56,6 +62,8 @@ const VideoChat = ({
   const isMounted = useRef(false);
   let count = useRef(0);
 
+  //checking if user is allowed
+
   useEffect(() => {
     isMounted.current = true;
 
@@ -73,6 +81,7 @@ const VideoChat = ({
         toast.error(
           error instanceof Error ? error.message : "Something went wrong"
         );
+        navigation(`/`);
       }
     })();
 
@@ -82,7 +91,8 @@ const VideoChat = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [classId]);
 
-  const tokenCreateFn = async (uid: any, classID: string) => {
+  //agrora token  create function
+  const tokenCreateFn = async (uid: number, classID: string) => {
     try {
       const response = await mutate({
         path: `room/${classID}/token`,
@@ -100,9 +110,11 @@ const VideoChat = ({
       toast.error(
         error instanceof Error ? error.message : "Something went wrong"
       );
+      navigation(`/`);
     }
   };
 
+  //agora client handling
   useEffect(() => {
     isMounted.current = true;
     (async () => {
@@ -112,7 +124,7 @@ const VideoChat = ({
         if (count.current !== 0) return;
         count.current++;
 
-        const token = await tokenCreateFn(user?.vId, classId);
+        const token = await tokenCreateFn(Number(user?.vId), classId);
 
         client.current = AgoraRTC.createClient({
           mode: "live",
@@ -121,35 +133,41 @@ const VideoChat = ({
 
         client.current.on("user-joined", (user: any) => {
           console.log("===============================join", user);
+
+          setRemoteUsers((prevUsers) => [...prevUsers, user]);
         });
 
         client.current.on(
           "user-published",
-          async (user: any, mediaType: any) => {
+          async (
+            user: IAgoraRTCRemoteUser,
+            mediaType: "audio" | "video" | "datachannel"
+          ) => {
             //subscribe to remote video
-            await client.current.subscribe(user, mediaType);
+            await client.current?.subscribe(user, mediaType);
+
+            console.log({ user, mediaType });
 
             if (mediaType === "video") {
-              const remoteVideoTrack = user.videoTrack;
-              setUserVideoMute(false);
-
-              document?.querySelector(`.localVideo`)?.remove();
-              const localPlayerContainer = document.createElement("div");
-              localPlayerContainer.id = "localVideo";
-              localPlayerContainer.className = `localVideo w-full h-screen `;
-              document
-                ?.querySelector(".local-parent-div")
-                ?.appendChild(localPlayerContainer);
-              remoteVideoTrack && remoteVideoTrack.play("localVideo");
+              // const remoteVideoTrack = user.videoTrack;
+              // setUserVideoMute(false);
+              // document?.querySelector(`.localVideo`)?.remove();
+              // const localPlayerContainer = document.createElement("div");
+              // localPlayerContainer.id = "localVideo";
+              // localPlayerContainer.className = `localVideo w-full h-screen `;
+              // document
+              //   ?.querySelector(".local-parent-div")
+              //   ?.appendChild(localPlayerContainer);
+              // remoteVideoTrack && remoteVideoTrack.play("localVideo");
             }
 
             if (mediaType === "audio") {
               setUserAudioMute(false);
-              const remoteAudioTrack = user.audioTrack;
-              remoteAudioTrack.play();
+              // const remoteAudioTrack = user.audioTrack;
+              // remoteAudioTrack?.play();
             }
 
-            await client.current.setClientRole("host");
+            await client.current?.setClientRole("host");
           }
         );
         client.current.on(
@@ -165,7 +183,12 @@ const VideoChat = ({
           }
         );
 
-        await client.current.join(AGORA_APP_ID, classId, token, user?.vId);
+        await client.current.join(
+          AGORA_APP_ID,
+          classId,
+          token,
+          Number(user?.vId)
+        );
 
         // media stream create
         const [microphoneTrack, cameraTrack] =
@@ -176,25 +199,30 @@ const VideoChat = ({
 
         checkPublish.current = true;
 
-        await client.current.publish([microphoneTrack, cameraTrack]);
-
-        if (muteAudio) {
-          muteAudio();
-        }
-        if (muteVideo) {
-          muteVideo();
+        if (microphoneTrack || cameraTrack) {
+          await client.current?.setClientRole("host");
+          await client.current.publish([microphoneTrack, cameraTrack]);
         }
 
-        document?.querySelector(`.localVideo`)?.remove();
-        const localPlayerContainer = document.createElement("div");
-        localPlayerContainer.id = "localVideo";
-        localPlayerContainer.className = `localVideo w-full h-screen `;
-        document
-          ?.querySelector(".local-parent-div")
-          ?.appendChild(localPlayerContainer);
-        cameraTrack && cameraTrack.play("localVideo");
+        // if (muteAudio) {
+        //   muteAudio();
+        // }
+        // if (muteVideo) {
+        //   muteVideo();
+        // }
+
+        // document?.querySelector(`.localVideo`)?.remove();
+        // const localPlayerContainer = document.createElement("div");
+        // localPlayerContainer.id = "localVideo";
+        // localPlayerContainer.className = `localVideo w-full h-screen `;
+        // document
+        //   ?.querySelector(".local-parent-div")
+        //   ?.appendChild(localPlayerContainer);
+        // cameraTrack && cameraTrack.play("localVideo");
         // client.current.enableAudioVolumeIndicator();
       } catch (error) {
+        console.log({ error });
+
         if (error instanceof Error) {
           toast.error(error.message);
         } else {
@@ -227,7 +255,7 @@ const VideoChat = ({
       screenShareCheck.current = false;
       videoTrack.current = await AgoraRTC.createCameraVideoTrack();
       shareScreenTrack.current.setEnabled(false);
-      await client.current.unpublish(shareScreenTrack.current);
+      await client.current?.unpublish(shareScreenTrack.current);
       await client.current?.publish(videoTrack.current);
       document?.querySelector(`.localVideo`)?.remove();
       const localPlayerContainer = document.createElement("div");
@@ -248,7 +276,7 @@ const VideoChat = ({
       screenShareCheck.current = true;
       videoTrack.current?.setEnabled(false);
       await client.current?.unpublish(videoTrack.current);
-      await client.current.publish(shareScreenTrack.current);
+      await client.current?.publish(shareScreenTrack.current);
       document?.querySelector(`.localVideo`)?.remove();
       const localPlayerContainer = document.createElement("div");
       localPlayerContainer.id = "localVideo";
@@ -257,8 +285,12 @@ const VideoChat = ({
         ?.querySelector(".local-parent-div")
         ?.appendChild(localPlayerContainer);
       shareScreenTrack.current.play("localVideo");
-    } catch (error: any) {
-      new Error(error);
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Something went wrong"
+      );
+
+      navigation(`/`);
     }
   };
 
@@ -274,7 +306,7 @@ const VideoChat = ({
           screenShareCheck.current = false;
           videoTrack.current = await AgoraRTC.createCameraVideoTrack();
           shareScreenTrack.current.setEnabled(false);
-          await client.current.unpublish(shareScreenTrack.current);
+          await client.current?.unpublish(shareScreenTrack.current);
           await client.current?.publish(videoTrack.current);
           document?.querySelector(`.localVideo`)?.remove();
           const localPlayerContainer = document.createElement("div");
@@ -310,7 +342,13 @@ const VideoChat = ({
           _id: user?._id,
         },
       });
-    } catch (error) {}
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Something went wrong"
+      );
+
+      navigation(`/`);
+    }
   };
 
   const endCall = async () => {
@@ -351,7 +389,7 @@ const VideoChat = ({
 
   return (
     <>
-      {userVideoMute && (
+      {/* {userVideoMute && (
         <div className="h-screen w-screen fixed top-0 left-0 bg-gray-800 z-10 ">
           <div className="bg-theme z-[9999] flex-col gap-4 rounded-full flex items-center fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 p-8 justify-center">
             <VideocamOff className="text-white !text-7xl " />
@@ -368,9 +406,20 @@ const VideoChat = ({
             Audio Turned Off
           </h3>
         </div>
-      )}
+      )} */}
 
-      <div className="local-parent-div w-full min-h-screen text-white"></div>
+      {remoteUsers?.length === 0 ? (
+        <div className="h-screen w-screen fixed top-0 left-0 bg-gray-800 z-10 ">
+          <div className="bg-theme z-[9999] flex-col gap-4 rounded-full flex items-center fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 p-8 justify-center">
+            <VideocamOff className="text-white !text-7xl " />
+            <h3 className="font-medium tracking-wide text-xs">
+              No one is in the class
+            </h3>
+          </div>
+        </div>
+      ) : (
+        <ViewUsers remoteUsers={remoteUsers} setRemoteUsers={setRemoteUsers} />
+      )}
 
       <CallButtons
         data={data}

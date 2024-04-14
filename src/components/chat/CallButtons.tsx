@@ -95,8 +95,6 @@ const CallButtons = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [reloadUser]);
 
-  console.log({ allChats });
-
   return (
     <>
       <div

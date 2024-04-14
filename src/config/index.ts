@@ -1,3 +1,3 @@
-export const BASE_URL = "http://localhost:8000/api/v1/";
-export const AGORA_APP_ID = "5d7a0d5b7d9c4c2e9f6b3c5e3e4f5b6a";
-// export const BASE_URL = "https://vchat-server.onrender.com/api/v1/";
+// export const BASE_URL = "http://localhost:8000/api/v1/";
+export const AGORA_APP_ID = "fb8e5e4ab5824622ba298bc76f3f45a6";
+export const BASE_URL = "https://vchat-server.onrender.com/api/v1/";
