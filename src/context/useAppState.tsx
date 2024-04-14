@@ -1,4 +1,4 @@
-import { BASE_URL } from "config";
+import { BASE_URL, SOCKET_SERVER } from "config";
 import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { connect, Socket } from "socket.io-client";
 import UserType from "types/user";
@@ -14,9 +14,6 @@ type APP_CONTEXT = {
   setNavbarHeight: (arg: number) => void;
 };
 
-const socketServer = `ws://localhost:8000/`;
-// const socketServer = `wss://vchat-server.onrender.com/`;
-
 const AppContext = createContext<APP_CONTEXT>(contextDefaultValues);
 type Props = {
   children: React.ReactNode;
@@ -30,7 +27,7 @@ export const AppContextProvider = ({ children }: Props) => {
   const socket = useRef<Socket<any, any> | null>(null);
 
   useEffect(() => {
-    socket.current = connect(socketServer);
+    socket.current = connect(SOCKET_SERVER);
 
     socket?.current?.on("connect", () => {
       if (!user?._id) return;
