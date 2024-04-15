@@ -33,8 +33,8 @@ const CallButtons = ({
   classId?: string;
   shareScreen: () => void;
   endCall: () => void;
-  muteAudio: () => void;
-  muteVideo: () => void;
+  muteAudio: (muteAudio: boolean) => void;
+  muteVideo: (muteVideo: boolean) => void;
   isAudioMute: boolean;
   isVideoMute: boolean;
   isScreenSharing: boolean;
@@ -100,7 +100,7 @@ const CallButtons = ({
       <div
         className={` ${
           drawerActive ? " w-[calc(100%-5vw)] md:w-[500px]" : "w-0 "
-        } h-full fixed top-0 right-0 z-[999]  transition-all overflow-hidden ease-in-out duration-300 `}
+        } h-full fixed top-0 right-0 z-[9999]  transition-all overflow-hidden ease-in-out duration-300 `}
       >
         <Chat
           classId={classId?.toString()}
@@ -112,7 +112,7 @@ const CallButtons = ({
       <div
         className={` ${
           attendanceDetails ? "w-[calc(100%-5vw)] md:w-[500px]" : "w-0 "
-        } h-full   transition-all fixed top-0 right-0 z-[999] overflow-hidden ease-in-out duration-300 `}
+        } h-full   transition-all fixed top-0 right-0 z-[9999] overflow-hidden ease-in-out duration-300 `}
       >
         <AttendanceDetails
           data={data}
@@ -175,7 +175,7 @@ const CallButtons = ({
           </Button>
 
           <Button
-            onClick={muteAudio}
+            onClick={() => muteAudio(!isAudioMute)}
             className="!px-2 !py-1 md:!px-4 md:!py-2 "
           >
             <span>
@@ -188,7 +188,7 @@ const CallButtons = ({
           </Button>
 
           <Button
-            onClick={muteVideo}
+            onClick={() => muteVideo(!isVideoMute)}
             className="!px-2 !py-1 md:!px-4 md:!py-2 "
           >
             <span>

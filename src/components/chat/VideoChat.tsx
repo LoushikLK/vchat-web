@@ -1,7 +1,8 @@
-import { VideocamOff } from "@mui/icons-material";
+import { Mic, MicOff, Videocam, VideocamOff } from "@mui/icons-material";
 import AgoraRTC, {
   IAgoraRTCClient,
   IAgoraRTCRemoteUser,
+  ICameraVideoTrack,
   IMicrophoneAudioTrack,
 } from "agora-rtc-sdk-ng";
 import { AGORA_APP_ID } from "config";
@@ -13,8 +14,13 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import { KeyedMutator } from "swr";
 import RoomType from "types/room";
+import UserType from "types/user";
 import CallButtons from "./CallButtons";
-import ViewUsers from "./ViewUsers";
+import ViewUsers, { ViewStream } from "./ViewUsers";
+
+export interface CustomRemoteUser extends IAgoraRTCRemoteUser {
+  details?: UserType;
+}
 
 const VideoChat = ({
   classId,
@@ -32,7 +38,7 @@ const VideoChat = ({
 
   const client = useRef<IAgoraRTCClient>();
 
-  const videoTrack = useRef<any>();
+  const videoTrack = useRef<ICameraVideoTrack>();
   const audioTrack = useRef<IMicrophoneAudioTrack>();
   const shareScreenTrack = useRef<any>();
   const screenShareCheck = useRef(false);
@@ -40,22 +46,30 @@ const VideoChat = ({
   let checkPublish = useRef(false);
 
   const [isScreenSharing, setIsScreenSharing] = useState(false);
-  const [userAudioMute, setUserAudioMute] = useState(false);
-  const [userVideoMute, setUserVideoMute] = useState(false);
+  const [userAudioMute, setUserAudioMute] = useState(true);
+  const [userVideoMute, setUserVideoMute] = useState(true);
 
-  const [remoteUsers, setRemoteUsers] = useState<IAgoraRTCRemoteUser[]>([]);
+  const [remoteUsers, setRemoteUsers] = useState<CustomRemoteUser[]>([]);
 
-  let isQueryAudioMuted = query.get("joinWithoutAudio");
+  let isQueryAudioMuted = query.get("audio");
 
-  let isQueryVideoMuted = query.get("joinWithoutVideo");
+  let isQueryVideoMuted = query.get("video");
 
   useEffect(() => {
-    if (query.get("joinWithoutVideo") === "true") {
+    if (isQueryVideoMuted === "false") {
       setUserVideoMute(true);
+      muteVideo(true);
+    } else {
+      setUserVideoMute(false);
+      muteVideo(false);
     }
 
-    if (query.get("joinWithoutAudio") === "true") {
+    if (isQueryAudioMuted === "false") {
       setUserAudioMute(true);
+      muteAudio(true);
+    } else {
+      setUserAudioMute(false);
+      muteAudio(false);
     }
   }, [isQueryAudioMuted, isQueryVideoMuted, query]);
 
@@ -131,57 +145,22 @@ const VideoChat = ({
           codec: "h264",
         });
 
-        client.current.on("user-joined", (user: any) => {
-          console.log("===============================join", user);
+        client.current.on("user-joined", async (user: any) => {
+          const userData = await mutate({
+            path: `user/${user.uid}`,
+            method: "GET",
+          });
 
-          setRemoteUsers((prevUsers) => [...prevUsers, user]);
+          if (userData?.status === 200) {
+            setRemoteUsers((prevUsers) => [
+              ...prevUsers,
+              {
+                ...user,
+                details: userData?.data?.data?.data,
+              },
+            ]);
+          }
         });
-
-        client.current.on(
-          "user-published",
-          async (
-            user: IAgoraRTCRemoteUser,
-            mediaType: "audio" | "video" | "datachannel"
-          ) => {
-            //subscribe to remote video
-            await client.current?.subscribe(user, mediaType);
-
-            console.log({ user, mediaType });
-
-            if (mediaType === "video") {
-              // const remoteVideoTrack = user.videoTrack;
-              // setUserVideoMute(false);
-              // document?.querySelector(`.localVideo`)?.remove();
-              // const localPlayerContainer = document.createElement("div");
-              // localPlayerContainer.id = "localVideo";
-              // localPlayerContainer.className = `localVideo w-full h-screen `;
-              // document
-              //   ?.querySelector(".local-parent-div")
-              //   ?.appendChild(localPlayerContainer);
-              // remoteVideoTrack && remoteVideoTrack.play("localVideo");
-            }
-
-            if (mediaType === "audio") {
-              setUserAudioMute(false);
-              // const remoteAudioTrack = user.audioTrack;
-              // remoteAudioTrack?.play();
-            }
-
-            await client.current?.setClientRole("host");
-          }
-        );
-        client.current.on(
-          "user-unpublished",
-          async (user: any, mediaType: any) => {
-            if (mediaType === "audio") {
-              setUserAudioMute(true);
-            }
-
-            if (mediaType === "video") {
-              setUserVideoMute(true);
-            }
-          }
-        );
 
         await client.current.join(
           AGORA_APP_ID,
@@ -199,30 +178,10 @@ const VideoChat = ({
 
         checkPublish.current = true;
 
-        if (microphoneTrack || cameraTrack) {
-          await client.current?.setClientRole("host");
-          await client.current.publish([microphoneTrack, cameraTrack]);
-        }
-
-        // if (muteAudio) {
-        //   muteAudio();
-        // }
-        // if (muteVideo) {
-        //   muteVideo();
-        // }
-
-        // document?.querySelector(`.localVideo`)?.remove();
-        // const localPlayerContainer = document.createElement("div");
-        // localPlayerContainer.id = "localVideo";
-        // localPlayerContainer.className = `localVideo w-full h-screen `;
-        // document
-        //   ?.querySelector(".local-parent-div")
-        //   ?.appendChild(localPlayerContainer);
-        // cameraTrack && cameraTrack.play("localVideo");
-        // client.current.enableAudioVolumeIndicator();
+        await client.current?.setClientRole("host");
+        await client.current.publish([microphoneTrack, cameraTrack]);
+        client.current.enableAudioVolumeIndicator();
       } catch (error) {
-        console.log({ error });
-
         if (error instanceof Error) {
           toast.error(error.message);
         } else {
@@ -236,16 +195,18 @@ const VideoChat = ({
       if (checkPublish.current) {
         if (videoTrack.current?.enabled) {
           videoTrack.current?.setEnabled(false);
+          setUserVideoMute(true);
         }
         if (audioTrack.current?.enabled) {
           audioTrack.current?.setEnabled(false);
+          setUserAudioMute(true);
         }
 
         client.current?.leave();
       }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user?.vId, classId, user?.role]);
+  }, [user?.vId, classId, user?.role, userAudioMute, userVideoMute]);
 
   //handle share screen
 
@@ -316,7 +277,11 @@ const VideoChat = ({
             ?.querySelector(".local-parent-div")
             ?.appendChild(localPlayerContainer);
           videoTrack.current.play("localVideo");
-        } catch (error) {}
+        } catch (error) {
+          toast.error(
+            error instanceof Error ? error.message : "Something went wrong"
+          );
+        }
       });
     })();
 
@@ -376,49 +341,68 @@ const VideoChat = ({
   //handle end call
 
   //handle mute video
-  const muteVideo = () => {
-    setUserVideoMute((prev) => !prev);
-    videoTrack.current?.setEnabled(!videoTrack.current?.enabled);
+  const muteVideo = (muteVideo: boolean) => {
+    setUserVideoMute(muteVideo);
+    videoTrack.current?.setEnabled(muteVideo);
   };
 
   //handle mute audio
-  const muteAudio = () => {
-    setUserAudioMute((prev) => !prev);
-    audioTrack.current?.setEnabled(!audioTrack.current?.enabled);
+  const muteAudio = (muteAudio: boolean) => {
+    setUserAudioMute(muteAudio);
+    audioTrack.current?.setEnabled(muteAudio);
   };
 
   return (
     <>
-      {/* {userVideoMute && (
-        <div className="h-screen w-screen fixed top-0 left-0 bg-gray-800 z-10 ">
-          <div className="bg-theme z-[9999] flex-col gap-4 rounded-full flex items-center fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 p-8 justify-center">
-            <VideocamOff className="text-white !text-7xl " />
-            <h3 className="font-medium tracking-wide text-xs">
-              Video Turned Off
-            </h3>
-          </div>
-        </div>
-      )}
-      {userAudioMute && (
-        <div className="bg-gray-100/10 z-[9999] flex-col gap-4 rounded-xl flex items-center fixed left-10 bottom-10 p-4 justify-center">
-          <MicOff className="text-white !text-5xl " />
-          <h3 className="font-medium tracking-wide text-xs">
-            Audio Turned Off
-          </h3>
-        </div>
-      )} */}
-
       {remoteUsers?.length === 0 ? (
-        <div className="h-screen w-screen fixed top-0 left-0 bg-gray-800 z-10 ">
-          <div className="bg-theme z-[9999] flex-col gap-4 rounded-full flex items-center fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 p-8 justify-center">
-            <VideocamOff className="text-white !text-7xl " />
-            <h3 className="font-medium tracking-wide text-xs">
-              No one is in the class
-            </h3>
-          </div>
-        </div>
+        <>
+          {userVideoMute ? (
+            <div className="h-screen w-screen fixed top-0 left-0 bg-gray-800 z-10 ">
+              <div className="bg-theme z-[9999] flex-col gap-4 rounded-full flex items-center fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 p-8 justify-center">
+                <VideocamOff className="text-white !text-7xl " />
+                <h3 className="font-medium tracking-wide text-xs">
+                  No one is in the class
+                </h3>
+              </div>
+            </div>
+          ) : (
+            <div
+              className={` bg-red-500 border-2 rounded-md shadow-xl h-full min-h-[25rem] flex items-center  justify-center relative  `}
+              key={"100xx222xxx"}
+            >
+              <ViewStream
+                stream={videoTrack.current}
+                userName={user?.displayName}
+                photoUrl={user?.photoUrl}
+                videoVisible={!userVideoMute}
+              />
+
+              <h3 className="font-medium tracking-wide text-sm absolute top-0 left-0 p-2 border-md z-[9997] bg-purple-800/20 ">
+                {user?.displayName}
+              </h3>
+
+              <div className="absolute top-0 right-0 flex items-center justify-center flex-col p-4 gap-4">
+                <div className="bg-gray-100/10 z-[9997] flex-col gap-4 rounded-xl flex items-center p-4 justify-center">
+                  <Videocam className="text-white !text-2xl " />
+                </div>
+                <div className="bg-gray-100/10 z-[9997] flex-col gap-4 rounded-xl flex items-center  p-4 justify-center">
+                  {userAudioMute ? (
+                    <MicOff className="text-white !text-2xl " />
+                  ) : (
+                    <Mic className="text-white !text-2xl " />
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+        </>
       ) : (
-        <ViewUsers remoteUsers={remoteUsers} setRemoteUsers={setRemoteUsers} />
+        <ViewUsers
+          remoteUsers={remoteUsers}
+          setRemoteUsers={setRemoteUsers}
+          localVideo={videoTrack?.current}
+          agoraClient={client.current}
+        />
       )}
 
       <CallButtons

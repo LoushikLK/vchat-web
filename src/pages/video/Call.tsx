@@ -25,7 +25,7 @@ const CallView = () => {
     <>
       {videoScreen ? (
         <div className="min-w-screen min-h-screen  text-white bg-gray-900  ">
-          <div className="absolute top-0 z-50 w-full border-r border-white">
+          <div className="sticky top-0 z-[9998] w-full border-r bg-purple-800 border-white">
             <h3 className="font-medium tracking-wide text-lg p-4 bg-theme ">
               {data?.data?.title || "Anonymous"}
             </h3>
