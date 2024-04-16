@@ -123,16 +123,15 @@ const AttendanceDetails = ({
             {data?.joinedUsers
               ?.filter((inner) => inner._id !== user?._id)
               ?.map((item) => (
-                <div className="flex items-center bg-purple-400/50 gap-4 w-full h-full justify-between  rounded-md">
-                  <div
-                    className="flex flex-col items-start  p-4 gap-2"
-                    key={item?._id}
-                  >
+                <div
+                  className="flex items-center bg-purple-400/50 gap-4 w-full h-full justify-between  rounded-md"
+                  key={item?._id}
+                >
+                  <div className="flex flex-col items-start  p-4 gap-2">
                     <Avatar
                       src={item?.photoUrl}
                       sx={{ width: 32, height: 32 }}
                       alt="student"
-                      component={"image"}
                     >
                       {item?.displayName[0]}
                     </Avatar>

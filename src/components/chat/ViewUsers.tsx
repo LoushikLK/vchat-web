@@ -7,11 +7,13 @@ import {
   IRemoteVideoTrack,
 } from "agora-rtc-sdk-ng";
 import useAppState from "context/useAppState";
+import useVideoContext from "context/useVideoContext";
 import {
   createRef,
   Dispatch,
   SetStateAction,
   useEffect,
+  useRef,
   useState,
 } from "react";
 import { CustomRemoteUser } from "./VideoChat";
@@ -30,6 +32,7 @@ const ViewUsers = ({
   console.log({ remoteUsers });
 
   const { user } = useAppState();
+  const { userVideoMute, userAudioMute } = useVideoContext();
 
   return (
     <div className="w-full bg-black min-h-screen grid grid-cols-12 gap-4 p-4 place-content-center ">
@@ -39,7 +42,12 @@ const ViewUsers = ({
         } bg-red-500 border-2 rounded-md shadow-xl h-full min-h-[25rem] flex items-center  justify-center relative  `}
         key={"100xx222xxx"}
       >
-        <ViewStream stream={localVideo} />
+        <ViewStream
+          stream={localVideo}
+          userName={user?.displayName}
+          photoUrl={user?.photoUrl}
+          videoVisible={!userVideoMute}
+        />
 
         <h3 className="font-medium tracking-wide text-sm absolute top-0 left-0 p-2 border-md z-[9997] bg-purple-800/20 ">
           {user?.displayName}
@@ -47,16 +55,25 @@ const ViewUsers = ({
 
         <div className="absolute top-0 right-0 flex items-center justify-center flex-col p-4 gap-4">
           <div className="bg-gray-100/10 z-[9997] flex-col gap-4 rounded-xl flex items-center p-4 justify-center">
-            <VideocamOff className="text-white !text-2xl " />
+            {userVideoMute ? (
+              <VideocamOff className="text-white !text-2xl " />
+            ) : (
+              <Videocam className="text-white !text-2xl " />
+            )}
           </div>
           <div className="bg-gray-100/10 z-[9997] flex-col gap-4 rounded-xl flex items-center  p-4 justify-center">
-            <MicOff className="text-white !text-2xl " />
+            {userAudioMute ? (
+              <MicOff className="text-white !text-2xl " />
+            ) : (
+              <Mic className="text-white !text-2xl " />
+            )}
           </div>
         </div>
       </div>
       {remoteUsers?.map((user: CustomRemoteUser) => {
         return (
           <RemoteUserView
+            key={user?.uid}
             remoteUserCount={remoteUsers?.length}
             user={user}
             agoraClient={agoraClient}
@@ -74,11 +91,13 @@ const ViewStream = ({
   videoVisible,
   userName,
   photoUrl,
+  className,
 }: {
   stream?: ICameraVideoTrack | IRemoteVideoTrack;
   videoVisible?: boolean;
   userName?: string;
   photoUrl?: string;
+  className?: string;
 }) => {
   const localVideo = createRef<HTMLVideoElement>();
 
@@ -93,7 +112,7 @@ const ViewStream = ({
     <>
       {videoVisible ? (
         <video
-          className="w-full h-full"
+          className={`w-full h-full  ${className} `}
           playsInline
           ref={localVideo}
           autoPlay
@@ -130,7 +149,7 @@ const RemoteUserView = ({
 
   const [userAudioMute, setUserAudioMute] = useState(true);
 
-  const [videoTrack, setVideoTrack] = useState<IRemoteVideoTrack>();
+  const videoTrack = useRef<IRemoteVideoTrack>();
 
   useEffect(() => {
     if (!user?.uid) return;
@@ -138,11 +157,11 @@ const RemoteUserView = ({
     agoraClient?.on(
       "user-published",
       async (publishUser: IAgoraRTCRemoteUser, mediaType: any) => {
-        if (user?.uid === publishUser?.uid) return;
+        if (Number(user?.uid) !== Number(publishUser?.uid)) return;
 
         if (mediaType === "video") {
           await agoraClient?.subscribe(publishUser, mediaType);
-          setVideoTrack(publishUser.videoTrack);
+          videoTrack.current = publishUser.videoTrack;
           setUserVideoMute(false);
         }
 
@@ -168,11 +187,6 @@ const RemoteUserView = ({
     );
   }, [user?.uid, agoraClient]);
 
-  useEffect(() => {
-    if (!videoTrack) return;
-    setVideoTrack(videoTrack);
-  }, [videoTrack]);
-
   return (
     <div
       className={`${
@@ -181,7 +195,7 @@ const RemoteUserView = ({
       key={user.uid}
     >
       <ViewStream
-        stream={videoTrack}
+        stream={videoTrack?.current}
         userName={user?.details?.displayName}
         photoUrl={user?.details?.photoUrl}
         videoVisible={!userVideoMute}

@@ -1,5 +1,6 @@
 import { BASE_URL, SOCKET_SERVER } from "config";
 import { createContext, useContext, useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { connect, Socket } from "socket.io-client";
 import UserType from "types/user";
 
@@ -26,6 +27,8 @@ export const AppContextProvider = ({ children }: Props) => {
 
   const socket = useRef<Socket<any, any> | null>(null);
 
+  const navigate = useNavigate();
+
   useEffect(() => {
     socket.current = connect(SOCKET_SERVER);
 
@@ -34,9 +37,9 @@ export const AppContextProvider = ({ children }: Props) => {
       socket?.current?.emit("user-connected", user?._id);
     });
 
-    socket?.current?.onAny((event, ...args) => {
-      console.log(event, args);
-    });
+    // socket?.current?.onAny((event, ...args) => {
+    //   console.log(event, args);
+    // });
   }, [user?._id]);
 
   useEffect(() => {
@@ -53,6 +56,7 @@ export const AppContextProvider = ({ children }: Props) => {
         let data = await response?.json();
         if (response?.status !== 200) {
           setUser(null);
+          navigate("/");
         }
 
         setUser(data?.data?.data);
@@ -62,7 +66,7 @@ export const AppContextProvider = ({ children }: Props) => {
         setAppLoading(false);
       }
     })();
-  }, []);
+  }, [navigate]);
 
   return (
     <AppContext.Provider

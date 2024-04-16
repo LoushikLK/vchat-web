@@ -1,6 +1,7 @@
 import { VideoChat } from "components/chat";
 import Waiting from "components/chat/Waiting";
 import useAppState from "context/useAppState";
+import { VideoContextProvider } from "context/useVideoContext";
 import { useSWRFetch } from "hooks";
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
@@ -22,7 +23,7 @@ const CallView = () => {
   }, [roomId, socket]);
 
   return (
-    <>
+    <VideoContextProvider>
       {videoScreen ? (
         <div className="min-w-screen min-h-screen  text-white bg-gray-900  ">
           <div className="sticky top-0 z-[9998] w-full border-r bg-purple-800 border-white">
@@ -43,7 +44,7 @@ const CallView = () => {
           setVideoScreen={setVideoScreen}
         />
       )}
-    </>
+    </VideoContextProvider>
   );
 };
 

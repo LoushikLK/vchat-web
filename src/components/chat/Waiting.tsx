@@ -1,8 +1,9 @@
 import { Mic, MicOff, Videocam, VideocamOff } from "@mui/icons-material";
 import { Avatar, Button, IconButton } from "@mui/material";
 import useAppState from "context/useAppState";
+import useVideoContext from "context/useVideoContext";
 import { useFetch } from "hooks";
-import { Dispatch, SetStateAction, useEffect, useRef, useState } from "react";
+import { Dispatch, SetStateAction, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import RoomType from "types/room";
@@ -16,87 +17,38 @@ const Waiting = ({
   setVideoScreen: Dispatch<SetStateAction<boolean>>;
   roomId?: string;
 }) => {
-  const [audioStream, setAudioStream] = useState<MediaStream | null>(null);
-  const [videoStream, setVideoStream] = useState<MediaStream | null>(null);
+  const {
+    videoTrack,
+    userAudioMute,
+    userVideoMute,
+    handleLocalAudioOnOff,
+    handleLocalVideoOnOff,
+  } = useVideoContext();
+
   const videoRef = useRef<HTMLVideoElement>(null);
   const navigate = useNavigate();
   const { user, socket } = useAppState();
   const { mutate } = useFetch();
-  const getUserAudio = async () => {
-    try {
-      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        throw new Error("No audio source is found!");
-      }
-
-      const audioStream = await navigator.mediaDevices.getUserMedia({
-        audio: true,
-      });
-
-      setAudioStream(audioStream);
-    } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : "Something went wrong"
-      );
-    }
-  };
-  const closeUserAudio = () => {
-    try {
-      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        throw new Error("No audio source is found!");
-      }
-
-      if (audioStream) {
-        audioStream?.getTracks()?.forEach((track) => track?.stop());
-        setAudioStream(null);
-      }
-    } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : "Something went wrong"
-      );
-    }
-  };
-  const getUserVideo = async () => {
-    try {
-      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        throw new Error("No video source is found!");
-      }
-
-      const videoStream = await navigator.mediaDevices.getUserMedia({
-        video: true,
-      });
-
-      setVideoStream(videoStream);
-    } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : "Something went wrong"
-      );
-    }
-  };
 
   useEffect(() => {
-    if (videoStream?.active) {
-      videoRef.current && (videoRef.current.srcObject = videoStream);
-    }
-  }, [videoStream?.active, videoStream]);
+    let videoElementRef = videoRef.current;
+    (() => {
+      if (userVideoMute) return;
 
-  const closeUserVideo = () => {
-    try {
-      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        throw new Error("No video source is found!");
-      }
+      console.log({ videoTrack });
+      videoElementRef &&
+        videoTrack?.enabled &&
+        (videoElementRef.srcObject = new MediaStream([
+          videoTrack?.getMediaStreamTrack(),
+        ]));
+    })();
 
-      if (videoStream) {
-        videoStream?.getTracks()?.forEach((track) => track?.stop());
-      }
-
-      videoRef.current && (videoRef.current.srcObject = null);
-      setVideoStream(null);
-    } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : "Something went wrong"
-      );
-    }
-  };
+    return () => {
+      videoElementRef &&
+        videoTrack?.enabled &&
+        (videoElementRef.srcObject = null);
+    };
+  }, [videoTrack, userVideoMute]);
 
   const handleViewToastify = async (roomId: string) => {
     try {
@@ -117,13 +69,7 @@ const Waiting = ({
             <Button
               color="primary"
               size={"small"}
-              onClick={() =>
-                navigate(
-                  `/call/${roomId}?video=${Boolean(
-                    videoStream?.active
-                  )}&audio=${Boolean(audioStream?.active)}`
-                )
-              }
+              onClick={() => navigate(`/call/${roomId}`)}
             >
               Join
             </Button>
@@ -170,21 +116,13 @@ const Waiting = ({
       if (res?.status !== 200) throw new Error(res?.data?.error);
 
       if (data?.admin?._id === user?._id || data?.createBy?._id === user?._id) {
-        navigate(
-          `/call/${roomId}?video=${Boolean(
-            videoStream?.active
-          )}&audio=${Boolean(audioStream?.active)}`
-        );
+        navigate(`/call/${roomId}`);
         setVideoScreen(true);
         return;
       }
 
       if (data?.roomType === "PUBLIC") {
-        navigate(
-          `/call/${roomId}?video=${Boolean(
-            videoStream?.active
-          )}&audio=${Boolean(audioStream?.active)}`
-        );
+        navigate(`/call/${roomId}`);
         setVideoScreen(true);
         return;
       }
@@ -207,8 +145,8 @@ const Waiting = ({
       <div className="flex w-full gap-4 items-center justify-center  max-w-5xl ">
         <div className="w-full flex-col flex items-center justify-center bg-gray-400/50 shadow-2xl px-8 pt-8 rounded-md ">
           <div className="w-full h-72 bg-gray-900 flex items-center justify-center overflow-hidden ">
-            {videoStream?.active ? (
-              <video key={"12457856"} autoPlay={true} ref={videoRef}></video>
+            {!userVideoMute ? (
+              <video autoPlay={true} ref={videoRef}></video>
             ) : (
               <VideocamOff className="!text-white" />
             )}
@@ -216,15 +154,9 @@ const Waiting = ({
           <div className="flex items-center justify-evenly pt-4 w-full">
             <IconButton
               className="h-20 w-20 "
-              onClick={async () => {
-                if (audioStream?.active) {
-                  closeUserAudio();
-                } else {
-                  getUserAudio();
-                }
-              }}
+              onClick={() => handleLocalAudioOnOff(!userAudioMute)}
             >
-              {audioStream?.active ? (
+              {!userAudioMute ? (
                 <Mic color="primary" />
               ) : (
                 <MicOff color="error" />
@@ -232,15 +164,9 @@ const Waiting = ({
             </IconButton>
             <IconButton
               className="h-20 w-20 "
-              onClick={async () => {
-                if (videoStream?.active) {
-                  closeUserVideo();
-                } else {
-                  getUserVideo();
-                }
-              }}
+              onClick={() => handleLocalVideoOnOff(!userVideoMute)}
             >
-              {videoStream?.active ? (
+              {!userVideoMute ? (
                 <Videocam color="primary" />
               ) : (
                 <VideocamOff color="error" />
