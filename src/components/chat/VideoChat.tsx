@@ -124,33 +124,6 @@ const VideoChat = ({
           codec: "vp8",
         });
 
-        // client.current?.on("user-joined", async (user: IAgoraRTCRemoteUser) => {
-        //   console.log(
-        //     "user joined===============================================",
-        //     user
-        //   );
-
-        //   const userData = await mutate({
-        //     path: `user/${user.uid}`,
-        //     method: "GET",
-        //   });
-
-        //   if (userData?.status === 200) {
-        //     setRemoteUsers((prevUsers) => [
-        //       ...prevUsers,
-        //       {
-        //         ...user,
-        //         details: userData?.data?.data?.data,
-        //       },
-        //     ]);
-        //   }
-        // });
-        // client.current?.on("user-left", async (user: IAgoraRTCRemoteUser) => {
-        //   setRemoteUsers((prevUsers) =>
-        //     prevUsers?.filter((curr) => curr?.uid !== user?.uid)
-        //   );
-        // });
-
         const token = await tokenCreateFn(Number(user?.vId), classId);
 
         await client.current?.join(
@@ -230,7 +203,7 @@ const VideoChat = ({
 
   const shareScreen = async () => {
     if (isUserScreenSharing) {
-      !userVideoMute && handleLocalVideoOnOff(!userVideoMute);
+      !userVideoMute && handleLocalVideoOnOff(userVideoMute);
       isMounted.current && handleScreenSharingOnOff(true);
       screenShareCheck.current = false;
       await client.current?.unpublish(shareScreenTrack);
@@ -255,12 +228,12 @@ const VideoChat = ({
       shareScreenTrack?.on("track-ended", async () => {
         try {
           if (!screenShareCheck.current) return;
-          isMounted.current && handleLocalVideoOnOff(true);
+          isMounted.current && handleScreenSharingOnOff(true);
           screenShareCheck.current = false;
           shareScreenTrack?.setEnabled(false);
           shareScreenTrack &&
             (await client.current?.unpublish(shareScreenTrack));
-          !userVideoMute && handleLocalVideoOnOff(!userVideoMute);
+          !userVideoMute && handleLocalVideoOnOff(userVideoMute);
         } catch (error) {
           toast.error(
             error instanceof Error ? error.message : "Something went wrong"
@@ -380,7 +353,7 @@ const VideoChat = ({
     <>
       {remoteUsers?.length === 0 ? (
         <>
-          {userVideoMute ? (
+          {userVideoMute && !isUserScreenSharing ? (
             <div className="h-screen w-screen fixed top-0 left-0 bg-gray-800 z-10 ">
               <div className="bg-theme z-[9999] flex-col gap-4 rounded-full flex items-center fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 p-8 justify-center">
                 <VideocamOff className="text-white !text-7xl " />

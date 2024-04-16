@@ -198,7 +198,7 @@ const RemoteUserView = ({
       <div
         className={`${
           remoteUserCount === 1 ? "col-span-6" : "col-span-4"
-        } bg-black border-2 rounded-md shadow-xl min-h-[25rem] h-full flex items-center  justify-center relative `}
+        } bg-black border-2 rounded-md shadow-xl min-h-[25rem] max-h-screen h-full flex items-center  justify-center relative `}
         key={user.uid}
       >
         <ViewStream

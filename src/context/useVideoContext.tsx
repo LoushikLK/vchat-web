@@ -64,6 +64,7 @@ export const VideoContextProvider = ({ children }: Props) => {
       if (videoState) {
         shareScreenTrack?.current &&
           shareScreenTrack?.current?.setEnabled(false);
+        shareScreenTrack?.current && shareScreenTrack?.current?.stop();
         setIsUserScreenSharing(false);
       } else {
         shareScreenTrack.current = await AgoraRTC.createScreenVideoTrack(

@@ -5,7 +5,7 @@ import {
   ILocalVideoTrack,
   IRemoteVideoTrack,
 } from "agora-rtc-sdk-ng";
-import { createRef, useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 
 const PinScreen = ({
   open,
@@ -22,17 +22,24 @@ const PinScreen = ({
   userName?: string;
   photoUrl?: string;
 }) => {
-  const localVideo = createRef<HTMLVideoElement>();
+  const [isLoaded, setIsLoaded] = useState(false);
+  const localVideo = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
-    if (!localVideo.current) return;
-    localVideo.current.srcObject = stream
-      ? new MediaStream([stream?.getMediaStreamTrack()])
-      : null;
-  }, [stream, localVideo, open]);
+    if (open && stream && videoVisible) {
+      setIsLoaded(true);
+    } else {
+      setIsLoaded(false);
+    }
+  }, [open, stream, videoVisible]);
 
-  console.log({ videoVisible });
-  console.log({ stream });
+  useEffect(() => {
+    if (isLoaded && localVideo.current) {
+      localVideo.current.srcObject = stream
+        ? new MediaStream([stream?.getMediaStreamTrack()])
+        : null;
+    }
+  }, [isLoaded, stream]);
 
   return (
     <Dialog
@@ -42,6 +49,7 @@ const PinScreen = ({
       style={{
         zIndex: 9999,
       }}
+      keepMounted={false}
     >
       <div className="w-full bg-gray-900 min-h-screen flex flex-col items-center justify-start ">
         <div className="flex items-center justify-between bg-purple-700 w-full p-4">
