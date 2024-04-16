@@ -1,52 +1,47 @@
-import { Mic, MicOff, Videocam, VideocamOff } from "@mui/icons-material";
-import { Avatar } from "@mui/material";
+import {
+  CropFree,
+  Mic,
+  MicOff,
+  Videocam,
+  VideocamOff,
+} from "@mui/icons-material";
+import { Avatar, Tooltip } from "@mui/material";
 import {
   IAgoraRTCClient,
   IAgoraRTCRemoteUser,
   ICameraVideoTrack,
+  ILocalVideoTrack,
   IRemoteVideoTrack,
 } from "agora-rtc-sdk-ng";
 import useAppState from "context/useAppState";
-import useVideoContext from "context/useVideoContext";
-import {
-  createRef,
-  Dispatch,
-  SetStateAction,
-  useEffect,
-  useRef,
-  useState,
-} from "react";
-import { CustomRemoteUser } from "./VideoChat";
+import useVideoContext, { CustomRemoteUser } from "context/useVideoContext";
+import { createRef, useEffect, useRef, useState } from "react";
+import PinScreen from "./PinScreen";
 
-const ViewUsers = ({
-  remoteUsers,
-  setRemoteUsers,
-  localVideo,
-  agoraClient,
-}: {
-  remoteUsers: CustomRemoteUser[];
-  setRemoteUsers: Dispatch<SetStateAction<CustomRemoteUser[]>>;
-  localVideo?: ICameraVideoTrack;
-  agoraClient?: IAgoraRTCClient;
-}) => {
-  console.log({ remoteUsers });
-
+const ViewUsers = ({ agoraClient }: { agoraClient?: IAgoraRTCClient }) => {
   const { user } = useAppState();
-  const { userVideoMute, userAudioMute } = useVideoContext();
+  let {
+    userVideoMute,
+    userAudioMute,
+    videoTrack,
+    remoteUsers,
+    shareScreenTrack,
+    isUserScreenSharing,
+  } = useVideoContext();
 
   return (
     <div className="w-full bg-black min-h-screen grid grid-cols-12 gap-4 p-4 place-content-center ">
       <div
         className={`${
           remoteUsers?.length === 1 ? "col-span-6" : "col-span-4"
-        } bg-red-500 border-2 rounded-md shadow-xl h-full min-h-[25rem] flex items-center  justify-center relative  `}
+        } bg-black border-2 rounded-md shadow-xl h-full min-h-[25rem] flex items-center  justify-center relative  `}
         key={"100xx222xxx"}
       >
         <ViewStream
-          stream={localVideo}
+          stream={isUserScreenSharing ? shareScreenTrack : videoTrack}
           userName={user?.displayName}
           photoUrl={user?.photoUrl}
-          videoVisible={!userVideoMute}
+          videoVisible={!userVideoMute || isUserScreenSharing}
         />
 
         <h3 className="font-medium tracking-wide text-sm absolute top-0 left-0 p-2 border-md z-[9997] bg-purple-800/20 ">
@@ -93,7 +88,7 @@ const ViewStream = ({
   photoUrl,
   className,
 }: {
-  stream?: ICameraVideoTrack | IRemoteVideoTrack;
+  stream?: ICameraVideoTrack | IRemoteVideoTrack | ILocalVideoTrack;
   videoVisible?: boolean;
   userName?: string;
   photoUrl?: string;
@@ -145,83 +140,110 @@ const RemoteUserView = ({
   remoteUserCount: number;
   agoraClient?: IAgoraRTCClient;
 }) => {
-  const [userVideoMute, setUserVideoMute] = useState(true);
-
-  const [userAudioMute, setUserAudioMute] = useState(true);
-
-  const videoTrack = useRef<IRemoteVideoTrack>();
-
+  const [userVideoActive, setUserVideoActive] = useState<boolean>(false);
+  const [userAudioActive, setUserAudioActive] = useState<boolean>(false);
+  const [pinScreen, setPinScreen] = useState<boolean>(false);
+  const videoTrack = useRef<IRemoteVideoTrack | undefined>();
   useEffect(() => {
-    if (!user?.uid) return;
-
     agoraClient?.on(
       "user-published",
-      async (publishUser: IAgoraRTCRemoteUser, mediaType: any) => {
-        if (Number(user?.uid) !== Number(publishUser?.uid)) return;
+      async (publishUser: IAgoraRTCRemoteUser, mediaType: string) => {
+        console.log(
+          "user published===============================================",
+          user,
+          mediaType
+        );
 
         if (mediaType === "video") {
-          await agoraClient?.subscribe(publishUser, mediaType);
-          videoTrack.current = publishUser.videoTrack;
-          setUserVideoMute(false);
-        }
+          if (Number(user?.uid) !== Number(publishUser?.uid)) return;
 
+          await agoraClient?.subscribe(publishUser, mediaType);
+
+          videoTrack.current = publishUser.videoTrack;
+          setUserVideoActive(true);
+        }
         if (mediaType === "audio") {
-          publishUser?.audioTrack?.play();
-          setUserAudioMute(false);
+          await agoraClient?.subscribe(publishUser, mediaType);
+          publishUser.audioTrack?.play();
+          setUserAudioActive(true);
         }
       }
     );
-
     agoraClient?.on(
       "user-unpublished",
-      async (publishUser: IAgoraRTCRemoteUser, mediaType: any) => {
-        if (user?.uid === publishUser?.uid) return;
-        if (mediaType === "audio") {
-          setUserAudioMute(true);
-        }
-
+      async (user: IAgoraRTCRemoteUser, mediaType: string) => {
         if (mediaType === "video") {
-          setUserVideoMute(true);
+          await agoraClient?.unsubscribe(user, mediaType);
+          setUserVideoActive(false);
+        }
+        if (mediaType === "audio") {
+          await agoraClient?.unsubscribe(user, mediaType);
+          setUserAudioActive(false);
         }
       }
     );
-  }, [user?.uid, agoraClient]);
+  });
 
   return (
-    <div
-      className={`${
-        remoteUserCount === 1 ? "col-span-6" : "col-span-4"
-      } bg-red-500 border-2 rounded-md shadow-xl min-h-[25rem] h-full flex items-center  justify-center relative `}
-      key={user.uid}
-    >
-      <ViewStream
+    <>
+      <PinScreen
+        open={pinScreen}
+        onClose={() => setPinScreen(false)}
         stream={videoTrack?.current}
-        userName={user?.details?.displayName}
         photoUrl={user?.details?.photoUrl}
-        videoVisible={!userVideoMute}
+        userName={user?.details?.displayName}
+        videoVisible={userVideoActive}
       />
 
-      <h3 className="font-medium tracking-wide text-sm absolute top-0 left-0 p-2 border-md z-[9997] bg-purple-800/20 ">
-        {user?.details?.displayName}
-      </h3>
+      <div
+        className={`${
+          remoteUserCount === 1 ? "col-span-6" : "col-span-4"
+        } bg-black border-2 rounded-md shadow-xl min-h-[25rem] h-full flex items-center  justify-center relative `}
+        key={user.uid}
+      >
+        <ViewStream
+          stream={videoTrack?.current}
+          userName={user?.details?.displayName}
+          photoUrl={user?.details?.photoUrl}
+          videoVisible={userVideoActive}
+        />
 
-      <div className="absolute top-0 right-0 flex items-center justify-center flex-col p-4 gap-4">
-        <div className="bg-gray-100/10 z-[9997] flex-col gap-4 rounded-xl flex items-center p-4 justify-center">
-          {userVideoMute ? (
-            <VideocamOff className="text-white !text-2xl " />
-          ) : (
-            <Videocam className="text-white !text-2xl " />
-          )}
-        </div>
-        <div className="bg-gray-100/10 z-[9997] flex-col gap-4 rounded-xl flex items-center  p-4 justify-center">
-          {userAudioMute ? (
-            <MicOff className="text-white !text-2xl " />
-          ) : (
-            <Mic className="text-white !text-2xl " />
-          )}
+        <h3 className="font-medium tracking-wide text-sm absolute top-0 left-0 p-2 border-md z-[9997] bg-purple-800/20 ">
+          {user?.details?.displayName}
+        </h3>
+
+        <div className="absolute top-0 right-0 flex items-center justify-center flex-col p-4 gap-4">
+          <div
+            className="bg-gray-100/10 z-[9997] flex-col gap-4 rounded-xl cursor-pointer flex items-center p-4 justify-center"
+            onClick={() => setPinScreen(true)}
+          >
+            {
+              <Tooltip title="Pin Screen">
+                <CropFree className="text-white !text-2xl " />
+              </Tooltip>
+            }
+          </div>
+          <div className="bg-gray-100/10 z-[9997] flex-col gap-4 rounded-xl cursor-pointer flex items-center p-4 justify-center">
+            <Tooltip title="Camera">
+              {!userVideoActive ? (
+                <VideocamOff className="text-white !text-2xl " />
+              ) : (
+                <Videocam className="text-white !text-2xl " />
+              )}
+            </Tooltip>
+          </div>
+          <div className="bg-gray-100/10 z-[9997] flex-col gap-4 rounded-xl cursor-pointer flex items-center  p-4 justify-center">
+            <Tooltip title="Audio">
+              {!userAudioActive ? (
+                <MicOff className="text-white !text-2xl " />
+              ) : (
+                <Mic className="text-white !text-2xl " />
+              )}
+            </Tooltip>
+          </div>
         </div>
       </div>
-    </div>
+    </>
   );
 };
 
