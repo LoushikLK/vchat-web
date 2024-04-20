@@ -8,17 +8,22 @@ import {
 import { Avatar, Tooltip } from "@mui/material";
 import {
   IAgoraRTCClient,
-  IAgoraRTCRemoteUser,
   ICameraVideoTrack,
   ILocalVideoTrack,
   IRemoteVideoTrack,
 } from "agora-rtc-sdk-ng";
 import useAppState from "context/useAppState";
 import useVideoContext, { CustomRemoteUser } from "context/useVideoContext";
-import { createRef, useEffect, useRef, useState } from "react";
+import { createRef, MutableRefObject, useEffect, useState } from "react";
 import PinScreen from "./PinScreen";
 
-const ViewUsers = ({ agoraClient }: { agoraClient?: IAgoraRTCClient }) => {
+const ViewUsers = ({
+  agoraClient,
+  publishedUsers,
+}: {
+  agoraClient?: IAgoraRTCClient;
+  publishedUsers?: MutableRefObject<Map<any, any>>;
+}) => {
   const { user } = useAppState();
   let {
     userVideoMute,
@@ -72,6 +77,7 @@ const ViewUsers = ({ agoraClient }: { agoraClient?: IAgoraRTCClient }) => {
             remoteUserCount={remoteUsers?.length}
             user={user}
             agoraClient={agoraClient}
+            currentRef={publishedUsers?.current?.get(user?.uid)}
           />
         );
       })}
@@ -135,64 +141,68 @@ const RemoteUserView = ({
   user,
   remoteUserCount,
   agoraClient,
+  currentRef,
 }: {
   user: CustomRemoteUser;
   remoteUserCount: number;
   agoraClient?: IAgoraRTCClient;
+  currentRef?: CustomRemoteUser;
 }) => {
-  const [userVideoActive, setUserVideoActive] = useState<boolean>(false);
-  const [userAudioActive, setUserAudioActive] = useState<boolean>(false);
+  console.log({ currentRef });
+
+  // const [userVideoActive, setUserVideoActive] = useState<boolean>(false);
+  // const [userAudioActive, setUserAudioActive] = useState<boolean>(false);
   const [pinScreen, setPinScreen] = useState<boolean>(false);
-  const videoTrack = useRef<IRemoteVideoTrack | undefined>();
-  useEffect(() => {
-    agoraClient?.on(
-      "user-published",
-      async (publishUser: IAgoraRTCRemoteUser, mediaType: string) => {
-        console.log(
-          "user published===============================================",
-          user,
-          mediaType
-        );
+  // const videoTrack = useRef<IRemoteVideoTrack | undefined>();
+  // useEffect(() => {
+  //   agoraClient?.on(
+  //     "user-published",
+  //     async (publishUser: IAgoraRTCRemoteUser, mediaType: string) => {
+  //       console.log(
+  //         "user published===============================================",
+  //         user,
+  //         mediaType
+  //       );
 
-        if (mediaType === "video") {
-          if (Number(user?.uid) !== Number(publishUser?.uid)) return;
+  //       if (mediaType === "video") {
+  //         if (Number(user?.uid) !== Number(publishUser?.uid)) return;
 
-          await agoraClient?.subscribe(publishUser, mediaType);
+  //         await agoraClient?.subscribe(publishUser, mediaType);
 
-          videoTrack.current = publishUser.videoTrack;
-          setUserVideoActive(true);
-        }
-        if (mediaType === "audio") {
-          await agoraClient?.subscribe(publishUser, mediaType);
-          publishUser.audioTrack?.play();
-          setUserAudioActive(true);
-        }
-      }
-    );
-    agoraClient?.on(
-      "user-unpublished",
-      async (user: IAgoraRTCRemoteUser, mediaType: string) => {
-        if (mediaType === "video") {
-          await agoraClient?.unsubscribe(user, mediaType);
-          setUserVideoActive(false);
-        }
-        if (mediaType === "audio") {
-          await agoraClient?.unsubscribe(user, mediaType);
-          setUserAudioActive(false);
-        }
-      }
-    );
-  });
+  //         videoTrack.current = publishUser.videoTrack;
+  //         setUserVideoActive(true);
+  //       }
+  //       if (mediaType === "audio") {
+  //         await agoraClient?.subscribe(publishUser, mediaType);
+  //         publishUser.audioTrack?.play();
+  //         setUserAudioActive(true);
+  //       }
+  //     }
+  //   );
+  //   agoraClient?.on(
+  //     "user-unpublished",
+  //     async (user: IAgoraRTCRemoteUser, mediaType: string) => {
+  //       if (mediaType === "video") {
+  //         await agoraClient?.unsubscribe(user, mediaType);
+  //         setUserVideoActive(false);
+  //       }
+  //       if (mediaType === "audio") {
+  //         await agoraClient?.unsubscribe(user, mediaType);
+  //         setUserAudioActive(false);
+  //       }
+  //     }
+  //   );
+  // });
 
   return (
     <>
       <PinScreen
         open={pinScreen}
         onClose={() => setPinScreen(false)}
-        stream={videoTrack?.current}
+        stream={currentRef?.videoTrack}
         photoUrl={user?.details?.photoUrl}
         userName={user?.details?.displayName}
-        videoVisible={userVideoActive}
+        videoVisible={currentRef?.hasVideo}
       />
 
       <div
@@ -202,10 +212,10 @@ const RemoteUserView = ({
         key={user.uid}
       >
         <ViewStream
-          stream={videoTrack?.current}
+          stream={currentRef?.videoTrack}
           userName={user?.details?.displayName}
           photoUrl={user?.details?.photoUrl}
-          videoVisible={userVideoActive}
+          videoVisible={currentRef?.hasVideo}
         />
 
         <h3 className="font-medium tracking-wide text-sm absolute top-0 left-0 p-2 border-md z-[9997] bg-purple-800/20 ">
@@ -225,7 +235,7 @@ const RemoteUserView = ({
           </div>
           <div className="bg-gray-100/10 z-[9997] flex-col gap-4 rounded-xl cursor-pointer flex items-center p-4 justify-center">
             <Tooltip title="Camera">
-              {!userVideoActive ? (
+              {!currentRef?.hasVideo ? (
                 <VideocamOff className="text-white !text-2xl " />
               ) : (
                 <Videocam className="text-white !text-2xl " />
@@ -234,7 +244,7 @@ const RemoteUserView = ({
           </div>
           <div className="bg-gray-100/10 z-[9997] flex-col gap-4 rounded-xl cursor-pointer flex items-center  p-4 justify-center">
             <Tooltip title="Audio">
-              {!userAudioActive ? (
+              {!currentRef?.hasAudio ? (
                 <MicOff className="text-white !text-2xl " />
               ) : (
                 <Mic className="text-white !text-2xl " />

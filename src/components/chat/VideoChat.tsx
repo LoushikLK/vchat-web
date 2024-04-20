@@ -51,6 +51,8 @@ const VideoChat = ({
   const isMounted = useRef(false);
   let count = useRef(0);
 
+  const publishedUsers = useRef(new Map());
+
   //checking if user is allowed
   useEffect(() => {
     isMounted.current = true;
@@ -126,6 +128,59 @@ const VideoChat = ({
 
         const token = await tokenCreateFn(Number(user?.vId), classId);
 
+        client.current?.on("user-joined", async (user: IAgoraRTCRemoteUser) => {
+          console.log(
+            "user joined===============================================",
+            user
+          );
+
+          const userData = await mutate({
+            path: `user/${user.uid}`,
+            method: "GET",
+          });
+
+          if (userData?.status === 200) {
+            setRemoteUsers((prevUsers) => [
+              ...prevUsers?.filter((curr) => curr?.uid !== user?.uid),
+              {
+                ...user,
+                details: userData?.data?.data?.data,
+              },
+            ]);
+          }
+        });
+        client.current?.on("user-left", async (user: IAgoraRTCRemoteUser) => {
+          setRemoteUsers((prevUsers) =>
+            prevUsers?.filter((curr) => curr?.uid !== user?.uid)
+          );
+        });
+
+        client.current?.on(
+          "user-published",
+          async (publishUser: IAgoraRTCRemoteUser, mediaType: string) => {
+            if (mediaType === "video") {
+              await client.current?.subscribe(publishUser, mediaType);
+              publishedUsers.current.set(publishUser?.uid, publishUser);
+            }
+            if (mediaType === "audio") {
+              await client.current?.subscribe(publishUser, mediaType);
+              publishUser.audioTrack?.play();
+            }
+          }
+        );
+        client.current?.on(
+          "user-unpublished",
+          async (publishUser: IAgoraRTCRemoteUser, mediaType: string) => {
+            if (mediaType === "video") {
+              await client.current?.unsubscribe(publishUser, mediaType);
+              publishedUsers.current.delete(publishUser?.uid);
+            }
+            if (mediaType === "audio") {
+              await client.current?.unsubscribe(publishUser, mediaType);
+            }
+          }
+        );
+
         await client.current?.join(
           AGORA_APP_ID,
           classId,
@@ -167,37 +222,6 @@ const VideoChat = ({
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.vId, classId, user?.role, audioTrack, videoTrack]);
-
-  useEffect(() => {
-    if (!client.current) return;
-
-    client.current?.on("user-joined", async (user: IAgoraRTCRemoteUser) => {
-      console.log(
-        "user joined===============================================",
-        user
-      );
-
-      const userData = await mutate({
-        path: `user/${user.uid}`,
-        method: "GET",
-      });
-
-      if (userData?.status === 200) {
-        setRemoteUsers((prevUsers) => [
-          ...prevUsers?.filter((curr) => curr?.uid !== user?.uid),
-          {
-            ...user,
-            details: userData?.data?.data?.data,
-          },
-        ]);
-      }
-    });
-    client.current?.on("user-left", async (user: IAgoraRTCRemoteUser) => {
-      setRemoteUsers((prevUsers) =>
-        prevUsers?.filter((curr) => curr?.uid !== user?.uid)
-      );
-    });
-  }, []);
 
   //handle share screen
 
@@ -395,7 +419,10 @@ const VideoChat = ({
           )}
         </>
       ) : (
-        <ViewUsers agoraClient={client?.current} />
+        <ViewUsers
+          agoraClient={client?.current}
+          publishedUsers={publishedUsers}
+        />
       )}
 
       <CallButtons

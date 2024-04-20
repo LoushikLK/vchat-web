@@ -32,8 +32,6 @@ const Random = ({
     handleLocalVideoOnOff,
     remoteUsers,
     setRemoteUsers,
-    isUserScreenSharing,
-    shareScreenTrack,
   } = useVideoContext();
 
   const client = useRef<IAgoraRTCClient>();
@@ -43,6 +41,8 @@ const Random = ({
 
   const isMounted = useRef(false);
   let count = useRef(0);
+
+  const publishedUsers = useRef(new Map());
 
   //checking if user is allowed
   useEffect(() => {
@@ -119,6 +119,59 @@ const Random = ({
 
         const token = await tokenCreateFn(Number(user?.vId), roomId);
 
+        client.current?.on("user-joined", async (user: IAgoraRTCRemoteUser) => {
+          console.log(
+            "user joined===============================================",
+            user
+          );
+
+          const userData = await mutate({
+            path: `user/${user.uid}`,
+            method: "GET",
+          });
+
+          if (userData?.status === 200) {
+            setRemoteUsers((prevUsers) => [
+              ...prevUsers?.filter((curr) => curr?.uid !== user?.uid),
+              {
+                ...user,
+                details: userData?.data?.data?.data,
+              },
+            ]);
+          }
+        });
+        client.current?.on("user-left", async (user: IAgoraRTCRemoteUser) => {
+          setRemoteUsers((prevUsers) =>
+            prevUsers?.filter((curr) => curr?.uid !== user?.uid)
+          );
+        });
+
+        client.current?.on(
+          "user-published",
+          async (publishUser: IAgoraRTCRemoteUser, mediaType: string) => {
+            if (mediaType === "video") {
+              await client.current?.subscribe(publishUser, mediaType);
+              publishedUsers.current.set(publishUser?.uid, publishUser);
+            }
+            if (mediaType === "audio") {
+              await client.current?.subscribe(publishUser, mediaType);
+              publishUser.audioTrack?.play();
+            }
+          }
+        );
+        client.current?.on(
+          "user-unpublished",
+          async (publishUser: IAgoraRTCRemoteUser, mediaType: string) => {
+            if (mediaType === "video") {
+              await client.current?.unsubscribe(publishUser, mediaType);
+              publishedUsers.current.delete(publishUser?.uid);
+            }
+            if (mediaType === "audio") {
+              await client.current?.unsubscribe(publishUser, mediaType);
+            }
+          }
+        );
+
         await client.current?.join(
           AGORA_APP_ID,
           roomId,
@@ -162,41 +215,9 @@ const Random = ({
   }, [user?.vId, roomId, user?.role, audioTrack, videoTrack]);
 
   useEffect(() => {
-    if (!client.current) return;
-
-    client.current?.on("user-joined", async (user: IAgoraRTCRemoteUser) => {
-      console.log(
-        "user joined===============================================",
-        user
-      );
-
-      const userData = await mutate({
-        path: `user/${user.uid}`,
-        method: "GET",
-      });
-
-      if (userData?.status === 200) {
-        setRemoteUsers((prevUsers) => [
-          ...prevUsers?.filter((curr) => curr?.uid !== user?.uid),
-          {
-            ...user,
-            details: userData?.data?.data?.data,
-          },
-        ]);
-      }
-    });
-    client.current?.on("user-left", async (user: IAgoraRTCRemoteUser) => {
-      setRemoteUsers((prevUsers) =>
-        prevUsers?.filter((curr) => curr?.uid !== user?.uid)
-      );
-    });
-  }, []);
-
-  useEffect(() => {
     (async () => {
       if (!userVideoMute && userJoined.current) {
         videoTrack?.setEnabled(true);
-        await client.current?.unpublish(shareScreenTrack);
         await client.current?.unpublish(videoTrack);
         videoTrack && (await client.current?.publish(videoTrack));
       }
@@ -207,30 +228,7 @@ const Random = ({
         audioTrack && (await client.current?.publish(audioTrack));
       }
     })();
-  }, [
-    userVideoMute,
-    userAudioMute,
-    videoTrack,
-    audioTrack,
-    shareScreenTrack,
-    isUserScreenSharing,
-  ]);
-
-  useEffect(() => {
-    (async () => {
-      if (isUserScreenSharing && shareScreenTrack?.enabled) {
-        videoTrack && videoTrack?.setEnabled(false);
-        videoTrack && (await client?.current?.unpublish(videoTrack));
-        shareScreenTrack?.setEnabled(true);
-        await client.current?.publish(shareScreenTrack);
-      }
-    })();
-  }, [
-    isUserScreenSharing,
-    shareScreenTrack,
-    shareScreenTrack?.enabled,
-    videoTrack,
-  ]);
+  }, [userVideoMute, userAudioMute, videoTrack, audioTrack]);
 
   //handle user leave
   const handleUserLeave = async () => {
@@ -296,7 +294,7 @@ const Random = ({
     <>
       {remoteUsers?.length === 0 ? (
         <>
-          {userVideoMute && !isUserScreenSharing ? (
+          {userVideoMute ? (
             <div className="h-screen w-screen fixed top-0 left-0 bg-gray-800 z-10 ">
               <div className="bg-theme z-[9999] flex-col gap-4 rounded-full flex items-center fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 p-8 justify-center">
                 <VideocamOff className="text-white !text-7xl " />
@@ -311,10 +309,10 @@ const Random = ({
               key={"100xx222xxx"}
             >
               <ViewStream
-                stream={isUserScreenSharing ? shareScreenTrack : videoTrack}
+                stream={videoTrack}
                 userName={user?.displayName}
                 photoUrl={user?.photoUrl}
-                videoVisible={!userVideoMute || isUserScreenSharing}
+                videoVisible={!userVideoMute}
                 className="max-h-[90vh] w-full"
               />
 
@@ -338,7 +336,10 @@ const Random = ({
           )}
         </>
       ) : (
-        <ViewUsers agoraClient={client?.current} />
+        <ViewUsers
+          agoraClient={client?.current}
+          publishedUsers={publishedUsers}
+        />
       )}
 
       <RandomScreenButton
