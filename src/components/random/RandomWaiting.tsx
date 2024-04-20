@@ -26,8 +26,6 @@ const RandomWaiting = ({
     let videoElementRef = videoRef.current;
     (() => {
       if (userVideoMute) return;
-
-      console.log({ videoTrack });
       videoElementRef &&
         videoTrack?.enabled &&
         (videoElementRef.srcObject = new MediaStream([

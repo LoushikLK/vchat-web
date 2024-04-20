@@ -25,7 +25,8 @@ const CallRandom = () => {
         });
 
         if (res?.status !== 200) throw new Error(res?.data?.error);
-        setRoomId(res?.data?.data?._id);
+
+        setRoomId(res?.data?.data?.data?._id);
       } catch (error) {
         setRefetch((prev) => !prev);
       }
@@ -43,7 +44,7 @@ const CallRandom = () => {
               Meet Anonymous
             </h3>
           </div>
-          <Random />
+          <Random roomId={roomId} skipUser={() => setRoomId("")} />
         </div>
       ) : (
         <RandomWaiting setVideoScreen={setVideoScreen} />
