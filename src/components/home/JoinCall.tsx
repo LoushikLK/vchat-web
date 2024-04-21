@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 
 const JoinCall = () => {
-  const [roomId, setRoomId] = useState("63e87ce7c7fae66a55d23a6a");
+  const [roomId, setRoomId] = useState("");
 
   const navigation = useNavigate();
 
