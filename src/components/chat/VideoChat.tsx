@@ -173,7 +173,7 @@ const VideoChat = ({
           async (publishUser: IAgoraRTCRemoteUser, mediaType: string) => {
             if (mediaType === "video") {
               await client.current?.unsubscribe(publishUser, mediaType);
-              publishedUsers.current.delete(publishUser?.uid);
+              publishedUsers.current.set(publishUser?.uid, publishUser);
             }
             if (mediaType === "audio") {
               await client.current?.unsubscribe(publishUser, mediaType);
